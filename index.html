@@ -85,9 +85,83 @@
         
         /* 自动同步提示 */
         .sync-tip { font-size: 13px; color: #666; margin-top: 5px; }
+        
+        /* ========== 编辑模式样式 ========== */
+        .edit-mode-btn { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 1000; 
+            padding: 12px 24px; 
+            background: linear-gradient(135deg, #007BFF, #0056b3); 
+            color: white; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+            transition: all 0.3s;
+        }
+        .edit-mode-btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 16px rgba(0,123,255,0.4); 
+        }
+        .edit-mode-btn.active { 
+            background: linear-gradient(135deg, #dc3545, #a71d2a); 
+        }
+        
+        .edit-indicator {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1000;
+            padding: 8px 16px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border-radius: 4px;
+            font-size: 12px;
+            display: none;
+        }
+        
+        /* 可编辑元素的样式 */
+        .editable { 
+            cursor: pointer; 
+            padding: 2px 4px; 
+            border-radius: 3px; 
+            transition: all 0.2s; 
+        }
+        .editable:hover { 
+            background-color: rgba(0,123,255,0.1); 
+            outline: 2px dashed #007BFF; 
+        }
+        .editable.editing { 
+            background-color: white; 
+            outline: 2px solid #007BFF; 
+            padding: 4px;
+        }
+        
+        .save-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body>
+<!-- 编辑模式按钮 -->
+<button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">✏️ 进入编辑模式</button>
+<div class="edit-indicator" id="editIndicator">🔓 编辑模式已开启 - 点击文字即可编辑</div>
+<div class="save-notification" id="saveNotification">✅ 修改已保存并同步到 GitHub！</div>
+
 <div class="container">
     <!-- 导航标签 -->
     <div class="nav-tabs">
@@ -290,18 +364,179 @@
         }
     });
 
-    // 页面加载时初始化
-    document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('meetingDate').value = today;
-        document.getElementById('bookingDate').value = today;
+    // ==================== 编辑模式功能 ====================
+    let editMode = false;
+    let editPassword = "123456"; // 默认密码，可以修改
+    
+    function toggleEditMode() {
+        if (!editMode) {
+            // 进入编辑模式，需要密码
+            const password = prompt("请输入编辑密码：", "");
+            if (password === editPassword) {
+                enableEditMode();
+            } else if (password !== null) {
+                alert("密码错误！");
+            }
+        } else {
+            // 退出编辑模式
+            disableEditMode();
+        }
+    }
+    
+    function enableEditMode() {
+        editMode = true;
+        document.getElementById('editModeBtn').textContent = '🔒 退出编辑模式';
+        document.getElementById('editModeBtn').classList.add('active');
+        document.getElementById('editIndicator').style.display = 'block';
         
-        renderMeetingRecords();
-        renderBookingRecords();
-        renderRoomStatus();
-        renderLeaderStatus();
-        renderStatusLog();
-    });
+        // 为可编辑元素添加样式和点击事件
+        makeEditable();
+        
+        showNotification('✅ 编辑模式已开启！点击文字即可编辑。', 'info');
+    }
+    
+    function disableEditMode() {
+        editMode = false;
+        document.getElementById('editModeBtn').textContent = '✏️ 进入编辑模式';
+        document.getElementById('editModeBtn').classList.remove('active');
+        document.getElementById('editIndicator').style.display = 'none';
+        
+        // 移除可编辑样式
+        removeEditable();
+        
+        showNotification('✅ 已退出编辑模式。', 'info');
+    }
+    
+    function makeEditable() {
+        // 为需要编辑的元素添加 editable class 和点击事件
+        // 会议名称输入框
+        const meetingName = document.getElementById('meetingName');
+        meetingName.classList.add('editable');
+        meetingName.addEventListener('click', function() { makeElementEditable(this); });
+        
+        // 其他要求输入框
+        const meetingReq = document.getElementById('meetingRequirements');
+        meetingReq.classList.add('editable');
+        meetingReq.addEventListener('click', function() { makeElementEditable(this); });
+        
+        // 会议地点自定义输入框
+        const customLoc = document.getElementById('customLocation');
+        customLoc.classList.add('editable');
+        customLoc.addEventListener('click', function() { makeElementEditable(this); });
+        
+        // 会议室预定相关输入框
+        const bookingPerson = document.getElementById('bookingPerson');
+        bookingPerson.classList.add('editable');
+        bookingPerson.addEventListener('click', function() { makeElementEditable(this); });
+        
+        const bookingSubject = document.getElementById('bookingSubject');
+        bookingSubject.classList.add('editable');
+        bookingSubject.addEventListener('click', function() { makeElementEditable(this); });
+        
+        // 表格内容也可以编辑（会后添加）
+        // 这里只是示例，实际表格内容通过表单添加
+    }
+    
+    function removeEditable() {
+        document.querySelectorAll('.editable').forEach(el => {
+            el.classList.remove('editable');
+            el.classList.remove('editing');
+            el.removeEventListener('click', arguments.callee);
+        });
+    }
+    
+    function makeElementEditable(element) {
+        if (!editMode) return;
+        
+        // 如果已经在编辑，不重复添加
+        if (element.classList.contains('editing')) return;
+        
+        element.classList.add('editing');
+        const originalValue = element.value || element.textContent;
+        
+        // 创建输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalValue;
+        input.style.width = '100%';
+        input.style.padding = '8px';
+        input.style.border = '2px solid #007BFF';
+        input.style.borderRadius = '4px';
+        
+        // 替换原元素
+        const parent = element.parentNode;
+        parent.replaceChild(input, element);
+        input.focus();
+        
+        // 保存或取消
+        input.addEventListener('blur', function() {
+            saveEdit(this, element, originalValue);
+        });
+        
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                saveEdit(this, element, originalValue);
+            } else if (e.key === 'Escape') {
+                cancelEdit(this, element, originalValue);
+            }
+        });
+    }
+    
+    function saveEdit(input, originalElement, originalValue) {
+        const newValue = input.value;
+        originalElement.value = newValue;
+        originalElement.textContent = newValue;
+        
+        const parent = input.parentNode;
+        parent.replaceChild(originalElement, input);
+        
+        originalElement.classList.remove('editing');
+        
+        // 保存到 localStorage
+        saveData();
+        
+        // 显示保存成功提示
+        showNotification('✅ 修改已保存！', 'success');
+        
+        // 同步到 GitHub（可选）
+        // syncToGitHub();
+    }
+    
+    function cancelEdit(input, originalElement, originalValue) {
+        originalElement.value = originalValue;
+        originalElement.textContent = originalValue;
+        
+        const parent = input.parentNode;
+        parent.replaceChild(originalElement, input);
+        
+        originalElement.classList.remove('editing');
+    }
+    
+    function showNotification(message, type) {
+        const notification = document.getElementById('saveNotification');
+        notification.textContent = message;
+        notification.style.display = 'block';
+        notification.style.background = type === 'success' ? '#28a745' : '#007BFF';
+        
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+    
+    function saveData() {
+        localStorage.setItem('meetingRecords', JSON.stringify(meetingRecords));
+        localStorage.setItem('bookingRecords', JSON.stringify(bookingRecords));
+        localStorage.setItem('leaderStatus', JSON.stringify(leaderStatus));
+        localStorage.setItem('statusLog', JSON.stringify(statusLog));
+    }
+    
+    // 可选：同步到 GitHub
+    async function syncToGitHub() {
+        // 这里需要 GitHub API 调用
+        // 需要你的 GitHub Token
+        // 实现较复杂，先预留接口
+        console.log('同步到 GitHub...');
+    }
 
     // ==================== 标签切换 ====================
     function switchTab(tabName) {
@@ -439,13 +674,21 @@
                     <td><input type="checkbox" class="record-checkbox" data-module="meeting" value="${record.id}"></td>
                     <td>${formatDateDisplay(record.date)}</td>
                     <td>${record.time}</td>
-                    <td>${record.name}</td>
-                    <td>${record.location}</td>
+                    <td class="editable-cell">${record.name}</td>
+                    <td class="editable-cell">${record.location}</td>
                     <td>${formatLeaderNames(record.leaders)}</td>
-                    <td>${record.requirements || '-'}</td>
+                    <td class="editable-cell">${record.requirements || '-'}</td>
                 </tr>
             `;
         });
+        
+        // 为表格可编辑单元格添加点击事件
+        if (editMode) {
+            document.querySelectorAll('.editable-cell').forEach(cell => {
+                cell.classList.add('editable');
+                cell.addEventListener('click', function() { makeTableCellEditable(this); });
+            });
+        }
     }
 
     // ==================== 模块二：会议室预定 ====================
@@ -586,7 +829,7 @@
             container.innerHTML += `
                 <div class="status-card ${status.status}">
                     <div class="name">${leader}</div>
-                    <div class="status">${status.status === 'in' ? '✅ 在厂' : '🚗 外出'}</div>
+                    <div class="status">${status.status === 'in' ? '✅ 在厂' : '🚪 外出'}</div>
                     <div class="time">更新于：${status.updateTime}</div>
                     <div class="sync-tip">来源：${status.source === 'meeting' ? '会议登记' : (status.source === 'manual' ? '手动操作' : '系统默认')}</div>
                     <button class="toggle-btn ${status.status}" onclick="toggleLeaderStatus('${leader}')" style="margin-top: 10px;">
@@ -604,7 +847,7 @@
             tbody.innerHTML += `
                 <tr>
                     <td>${log.leader}</td>
-                    <td>${log.status === 'in' ? '✅ 在厂' : '🚗 外出'}</td>
+                    <td>${log.status === 'in' ? '✅ 在厂' : '🚪 外出'}</td>
                     <td>${log.time}</td>
                     <td>${log.source}</td>
                     <td>${log.remark}</td>
@@ -678,6 +921,19 @@
         XLSX.utils.book_append_sheet(wb, ws, "会议室预定");
         XLSX.writeFile(wb, "会议室预定记录.xlsx");
     }
+
+    // ==================== 页面加载初始化 ====================
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('meetingDate').value = today;
+        document.getElementById('bookingDate').value = today;
+        
+        renderMeetingRecords();
+        renderBookingRecords();
+        renderRoomStatus();
+        renderLeaderStatus();
+        renderStatusLog();
+    });
 </script>
 </body>
 </html>
