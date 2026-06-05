@@ -104,7 +104,7 @@
 </head>
 <body>
     <!-- 密码保护模态框 -->
-    <div id="passwordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; justify-content: center; align-items: center;">
+    <div id="passwordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; display: none; justify-content: center; align-items: center;">
         <div style="background: white; padding: 40px; border-radius: 8px; text-align: center; min-width: 300px;">
             <h2 style="margin-top: 0;">🔒 厂领导会议管理系统</h2>
             <p>请输入编辑密码以继续</p>
@@ -131,6 +131,7 @@
             <button class="nav-tab active" onclick="switchTab('meeting')">📝 会议登记</button>
             <button class="nav-tab" onclick="switchTab('booking')">📅 会议室预定</button>
             <button class="nav-tab" onclick="switchTab('status')">👥 领导在厂状态</button>
+            <button id="unlockBtn" onclick="showPasswordModal()" style="margin-left: auto; padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">🔒 解锁编辑</button>
         </div>
 
         <!-- 模块一：会议登记 -->
@@ -321,14 +322,22 @@
     <script>
         
         // ==================== 密码保护 ====================
-        const EDIT_PASSWORD = "2024@Meeting";  // ⚠️ 自定义密码！
+        const EDIT_PASSWORD = "123456";  // ⚠️ 自定义密码！
         let isAuthenticated = false;
 
+
+        // ==================== 显示密码弹窗 ====================
+        function showPasswordModal() {
+            document.getElementById('passwordModal').style.display = 'flex';
+        }
+        
         function checkPassword() {
             const input = document.getElementById('passwordInput').value;
             if (input === EDIT_PASSWORD) {
                 isAuthenticated = true;
                 document.getElementById('passwordModal').style.display = 'none';
+                document.getElementById('unlockBtn').textContent = '🔓 已解锁';
+                document.getElementById('unlockBtn').style.background = '#28a745';
                 showSaveNotification("✅ 已解锁编辑功能！");
             } else {
                 document.getElementById('passwordError').style.display = 'block';
