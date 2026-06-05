@@ -103,6 +103,18 @@
     </style>
 </head>
 <body>
+    <!-- 密码保护模态框 -->
+    <div id="passwordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 40px; border-radius: 8px; text-align: center; min-width: 300px;">
+            <h2 style="margin-top: 0;">🔒 厂领导会议管理系统</h2>
+            <p>请输入编辑密码以继续</p>
+            <input type="password" id="passwordInput" style="padding: 10px; font-size: 16px; margin: 10px 0; width: 200px;" onkeypress="if(event.key==='Enter') checkPassword()">
+            <br>
+            <button onclick="checkPassword()" style="padding: 10px 30px; background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">确认</button>
+            <p id="passwordError" style="color: red; display: none; margin-top: 10px;">密码错误！请重试。</p>
+        </div>
+    </div>
+
     <!-- 加载指示器 -->
     <div class="loading" id="loadingIndicator">
         ⏳ 正在加载数据...
@@ -307,6 +319,23 @@
     </div>
 
     <script>
+        
+        // ==================== 密码保护 ====================
+        const EDIT_PASSWORD = "2024@Meeting";  // ⚠️ 自定义密码！
+        let isAuthenticated = false;
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === EDIT_PASSWORD) {
+                isAuthenticated = true;
+                document.getElementById('passwordModal').style.display = 'none';
+                showSaveNotification("✅ 已解锁编辑功能！");
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+        
         // ==================== Google Apps Script URL ====================
         // ✅ 已替换为你的真实 URL
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRiS1L-DuTz07h3U-IA5BPjh3Pnqey9ReSFX9KtkAZVjRFmipcwd6BZ3IxrUIdsDzUyg/exec";
@@ -446,6 +475,12 @@
         }
 
         function addMeetingRecord() {
+            // 密码检查
+            if (!isAuthenticated) {
+                alert("⚠️ 请输入编辑密码才能编辑！\n\n点击页面中间的密码框输入密码。");
+                return;
+            }
+
             const date = document.getElementById('meetingDate').value;
             const time = document.getElementById('meetingTime').value;
             const name = document.getElementById('meetingName').value;
@@ -572,6 +607,12 @@
 
         // ==================== 模块二：会议室预定 ====================
         function addBooking() {
+            // 密码检查
+            if (!isAuthenticated) {
+                alert("⚠️ 请输入编辑密码才能编辑！\n\n点击页面中间的密码框输入密码。");
+                return;
+            }
+
             const date = document.getElementById('bookingDate').value;
             const startTime = document.getElementById('bookingStartTime').value;
             const endTime = document.getElementById('bookingEndTime').value;
