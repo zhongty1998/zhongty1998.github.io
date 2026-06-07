@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>厂领导会议管理系统</title>
+        <!-- 腾讯云开发 CloudBase SDK -->
+    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/latest/cloudbase.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -345,9 +347,34 @@
             }
         }
         
-        // ==================== Google Apps Script URL ====================
-        // ✅ 已替换为你的真实 URL
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxRiS1L-DuTz07h3U-IA5BPjh3Pnqey9ReSFX9KtkAZVjRFmipcwd6BZ3IxrUIdsDzUyg/exec";
+        // ==================== 腾讯云开发 CloudBase ====================
+        const CLOUDBASE_ENV = 'zhongty-d6gysytqj844d3470';
+        let cloudbaseApp = null;
+        let isCloudBaseReady = false;
+
+        // 初始化 CloudBase
+        async function initCloudBase() {
+            showLoading("正在连接云端...");
+            try {
+                cloudbaseApp = cloudbase.init({env: CLOUDBASE_ENV});
+                // 匿名登录
+                await cloudbaseApp.auth().signInAnonymously();
+                isCloudBaseReady = true;
+                console.log("✅ CloudBase 初始化成功！");
+                // 加载数据
+                await loadDataFromCloud();
+            } catch (error) {
+                console.error("CloudBase 初始化失败：", error);
+                alert("连接云端失败，将使用本地数据。\n错误：" + error.message);
+                hideLoading();
+                // 使用本地数据
+                renderMeetingRecords();
+                renderBookingRecords();
+                renderRoomStatus();
+                renderLeaderStatus();
+                renderStatusLog();
+            }
+        }
         
         // ==================== 数据初始化 ====================
         const leaders = ["张威", "郑志强", "李晓东", "司开国", "杨洪源", "张延永", "谢敏"];
@@ -379,86 +406,78 @@
             }, 3000);
         }
 
-        // ==================== 从 Google Apps Script 读取数据 ====================
+        // ==================== 从 CloudBase 读取数据 ====================
         async function loadDataFromCloud() {
+            if (!isCloudBaseReady) {
+                console.warn("CloudBase 未就绪");
+                return;
+            }
+            
             showLoading("正在从云端加载数据...");
             
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
-                const data = await response.json();
+                const res = await cloudbaseApp.database().collection('MeetingConfig').doc('config').get();
                 
-                if (data.error) {
-                    console.error("加载数据失败：", data.error);
-                    alert("加载数据失败：" + data.error);
+                if (res.data && res.data.length > 0) {
+                    const data = res.data[0];
+                    meetingRecords = data.meetingRecords || [];
+                    bookingRecords = data.bookingRecords || [];
+                    leaderStatus = data.leaderStatus || {};
+                    statusLog = data.statusLog || [];
+                    
+                    // 初始化领导状态（如果为空）
+                    leaders.forEach(leader => {
+                        if (!leaderStatus[leader]) {
+                            leaderStatus[leader] = { status: 'in', updateTime: new Date().toLocaleString(), remark: '', source: 'system' };
+                        }
+                    });
+                    
+                    // 渲染数据
+                    renderMeetingRecords();
+                    renderBookingRecords();
+                    renderRoomStatus();
+                    renderLeaderStatus();
+                    renderStatusLog();
+                    
                     hideLoading();
-                    return;
+                    console.log("✅ 数据已从云端加载！");
+                } else {
+                    // 没有云端数据，使用本地数据
+                    console.log("⚠️ 云端无数据，使用本地数据");
+                    hideLoading();
                 }
-                
-                meetingRecords = data.meetingRecords || [];
-                bookingRecords = data.bookingRecords || [];
-                leaderStatus = data.leaderStatus || {};
-                statusLog = data.statusLog || [];
-                
-                // 初始化领导状态（如果为空）
-                leaders.forEach(leader => {
-                    if (!leaderStatus[leader]) {
-                        leaderStatus[leader] = { status: 'in', updateTime: new Date().toLocaleString(), remark: '', source: 'system' };
-                    }
-                });
-                
-                // 渲染数据
-                renderMeetingRecords();
-                renderBookingRecords();
-                renderRoomStatus();
-                renderLeaderStatus();
-                renderStatusLog();
-                
-                hideLoading();
-                console.log("✅ 数据已从云端加载！");
-                
             } catch (error) {
                 console.error("加载数据失败：", error);
-                alert("加载数据失败，请检查 Google Apps Script URL 是否正确！\n\n错误：" + error.toString());
+                alert("加载云端数据失败！\n错误：" + error.message);
                 hideLoading();
             }
         }
 
-        // ==================== 保存数据到 Google Apps Script ====================
+        // ==================== 保存数据到 CloudBase ====================
         async function saveDataToCloud() {
+            if (!isCloudBaseReady) {
+                console.warn("CloudBase 未就绪，保存到本地");
+                // 可以在这里保存到 localStorage 作为备份
+                return;
+            }
+            
             showLoading("正在保存数据到云端...");
             
             try {
-                const data = {
+                await cloudbaseApp.database().collection('MeetingConfig').doc('config').set({
                     meetingRecords: meetingRecords,
                     bookingRecords: bookingRecords,
                     leaderStatus: leaderStatus,
-                    statusLog: statusLog
-                };
-                
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
+                    statusLog: statusLog,
+                    updateTime: new Date()
                 });
-                
-                const result = await response.json();
-                
-                if (result.error) {
-                    console.error("保存数据失败：", result.error);
-                    alert("保存数据失败：" + result.error);
-                    hideLoading();
-                    return;
-                }
                 
                 hideLoading();
                 showSaveNotification("✅ 数据已保存到云端！其他人刷新页面即可看到更新！");
                 console.log("✅ 数据已保存到云端！");
-                
             } catch (error) {
                 console.error("保存数据失败：", error);
-                alert("保存数据失败，请检查 Google Apps Script URL 是否正确！\n\n错误：" + error.toString());
+                alert("保存数据到云端失败！\n错误：" + error.message);
                 hideLoading();
             }
         }
@@ -854,8 +873,8 @@
             document.getElementById('meetingDate').value = today;
             document.getElementById('bookingDate').value = today;
             
-            // 从云端加载数据
-            loadDataFromCloud();
+            // 初始化 CloudBase 并加载数据
+            initCloudBase();
         });
     </script>
 </body>
