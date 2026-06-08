@@ -3,879 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <title>厂领导会议管理系统</title>
-        <!-- 腾讯云开发 CloudBase SDK -->
-    <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/latest/cloudbase.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: "Microsoft YaHei", sans-serif; margin: 0; padding: 0; background-color: #f4f6f8; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
-        
-        /* 顶部导航 */
-        .nav-tabs { display: flex; gap: 5px; margin-bottom: 20px; }
-        .nav-tab { padding: 12px 24px; background: #e9ecef; border: none; border-radius: 6px 6px 0 0; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; }
-        .nav-tab.active { background: #007BFF; color: white; }
-        .nav-tab:hover:not(.active) { background: #dee2e6; }
-        
-        /* 功能模块 */
-        .module { display: none; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .module.active { display: block; }
-        
-        h2 { color: #333; border-bottom: 2px solid #007BFF; padding-bottom: 10px; margin-top: 0; }
-        h3 { color: #555; margin-top: 25px; }
-        
-        .form-group { margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-        label { font-weight: bold; color: #555; min-width: 90px; }
-        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex: 1; }
-        input[readonly] { background-color: #f8f9fa; }
-        button { padding: 9px 20px; background-color: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .btn-success { background-color: #28a745; }
-        .btn-success:hover { background-color: #1e7e34; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #a71d2a; }
-        .btn-warning { background-color: #ffc107; color: #333; }
-        .btn-warning:hover { background-color: #e0a800; }
-        
-        /* 表格样式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
-        th, td { padding: 12px; text-align: center; vertical-align: middle; border-bottom: 1px solid #ddd; font-size: 14px; word-wrap: break-word; }
-        th { background-color: #f8f9fa; color: #333; }
-        tr:hover { background-color: #f8f9fa; }
-        
-        /* 领导在厂状态卡片 */
-        .status-cards { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
-        .status-card { width: 180px; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .status-card.in { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
-        .status-card.out { background: linear-gradient(135deg, #dc3545, #fd7e14); color: white; }
-        .status-card .name { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        .status-card .status { font-size: 14px; opacity: 0.9; }
-        .status-card .time { font-size: 12px; opacity: 0.8; margin-top: 8px; }
-        
-        /* 会议室状态 */
-        .room-status { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
-        .room-card { width: 280px; padding: 15px; border-radius: 8px; border: 2px solid #dee2e6; }
-        .room-card.available { border-color: #28a745; background-color: #f8fff8; }
-        .room-card.occupied { border-color: #dc3545; background-color: #fff8f8; }
-        .room-card .room-name { font-size: 16px; font-weight: bold; margin-bottom: 10px; }
-        .room-card .room-info { font-size: 14px; color: #555; }
-        .room-card .room-info span { display: block; margin: 5px 0; }
-        
-        /* 复选框组 */
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
-        .checkbox-item { display: flex; align-items: center; gap: 5px; background: #f9f9f9; padding: 5px 10px; border-radius: 4px; border: 1px solid #eee; }
-        .checkbox-item input { flex: none; margin: 0; }
-        .checkbox-item label { font-weight: normal; margin: 0; cursor: pointer; }
-        
-        /* 操作模块 */
-        .operation-module { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; display: flex; align-items: center; gap: 15px; }
-        
-        /* 分割线 */
-        .day-separator td { background-color: #fff3cd; color: #856404; text-align: center; font-weight: bold; padding: 10px; border: 1px solid #ffeeba; }
-        .daily-header th { background-color: #e9ecef; color: #495057; border-top: 2px solid #dee2e6; }
-        
-        /* 状态切换按钮 */
-        .toggle-btn { padding: 8px 16px; font-size: 14px; border: none; border-radius: 4px; cursor: pointer; }
-        .toggle-btn.in { background-color: #28a745; color: white; }
-        .toggle-btn.out { background-color: #dc3545; color: white; }
-        
-        /* 提示信息 */
-        .alert { padding: 12px; border-radius: 4px; margin-bottom: 15px; }
-        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        
-        /* 自动同步提示 */
-        .sync-tip { font-size: 13px; color: #666; margin-top: 5px; }
-        
-        /* 加载指示器 */
-        .loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px 40px; border-radius: 8px; z-index: 9999; }
-        .loading.show { display: block; }
-        
-        /* 保存成功提示 */
-        .save-notification { display: none; position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 12px 24px; border-radius: 4px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .save-notification.show { display: block; animation: fadeInOut 3s; }
-        
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { opacity: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .unlock-btn { padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.3s; }
+        .unlock-btn:hover { background: #c82333; }
+        .unlock-btn.unlocked { background: #28a745; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .nav-tab { padding: 12px 24px; background: white; border: 2px solid #667eea; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; color: #667eea; }
+        .nav-tab:hover, .nav-tab.active { background: #667eea; color: white; }
+        .module { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .module-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #667eea; display: flex; align-items: center; gap: 8px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 6px; color: #555; font-size: 14px; }
+        .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; font-family: inherit; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .btn { padding: 10px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s; font-family: inherit; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-danger { background: #dc3545; color: white; padding: 6px 14px; font-size: 13px; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 12px 0; }
+        .checkbox-item { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid #eee; }
+        .checkbox-item:hover { background: #e9ecef; }
+        .checkbox-item input { width: 16px; height: 16px; cursor: pointer; }
+        .table-wrap { overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #667eea; color: white; padding: 12px 8px; text-align: left; white-space: nowrap; }
+        td { padding: 10px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        tr:hover { background: #f8f9fa; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .badge-in { background: #d4edda; color: #155724; }
+        .badge-out { background: #f8d7da; color: #721c24; }
+        .badge-confirmed { background: #d1ecf1; color: #0c5460; }
+        #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        #loadingOverlay .spinner { background: white; padding: 24px 48px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .spinner-icon { font-size: 32px; animation: spin 1s linear infinite; display: inline-block; }
+        .spinner-text { margin-top: 12px; font-weight: 600; color: #667eea; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #toast { position: fixed; bottom: 30px; right: 30px; background: #28a745; color: white; padding: 14px 24px; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 9999; }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        .hint { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; color: #155724; margin-bottom: 16px; }
+        #passwordModal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        #passwordModal .modal-content { background: white; padding: 32px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        #passwordModal h3 { margin-bottom: 8px; color: #333; }
+        #passwordModal p { margin-bottom: 20px; color: #666; font-size: 14px; }
+        #passwordModal input { padding: 12px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; width: 100%; text-align: center; margin-bottom: 12px; }
+        #passwordModal input:focus { outline: none; border-color: #667eea; }
+        #passwordModal .error { color: #dc3545; font-size: 13px; display: none; margin-bottom: 12px; }
+        #passwordModal button { padding: 12px 32px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        #passwordModal button:hover { background: #5568d3; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .filter-bar input, .filter-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .leader-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+        .leader-card { padding: 16px; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
+        .leader-card.in-house { background: linear-gradient(135deg, #d4edda, #c3e6cb); border-color: #28a745; }
+        .leader-card.out { background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-color: #dc3545; }
+        .leader-card .name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+        .leader-card .status { font-size: 12px; opacity: 0.8; }
+        .leader-card .time { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 12px; text-align: center; }
+            .form-grid { grid-template-columns: 1fr; }
+            .checkbox-grid { grid-template-columns: repeat(2, 1fr); }
+            .leader-cards { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
-    <!-- 密码保护模态框 -->
-    <div id="passwordModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; display: none; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 40px; border-radius: 8px; text-align: center; min-width: 300px;">
-            <h2 style="margin-top: 0;">🔒 厂领导会议管理系统</h2>
-            <p>请输入编辑密码以继续</p>
-            <input type="password" id="passwordInput" style="padding: 10px; font-size: 16px; margin: 10px 0; width: 200px;" onkeypress="if(event.key==='Enter') checkPassword()">
-            <br>
-            <button onclick="checkPassword()" style="padding: 10px 30px; background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">确认</button>
-            <p id="passwordError" style="color: red; display: none; margin-top: 10px;">密码错误！请重试。</p>
+
+<div id="passwordModal">
+    <div class="modal-content">
+        <h3>🔒 解锁编辑功能</h3>
+        <p>请输入密码以解锁编辑权限</p>
+        <input type="password" id="passwordInput" placeholder="请输入密码" onkeypress="if(event.key==='Enter')checkPassword()">
+        <div id="passwordError" class="error">❌ 密码错误，请重新输入！</div>
+        <button onclick="checkPassword()">确认</button>
+    </div>
+</div>
+
+<div id="loadingOverlay" style="display:none;">
+    <div class="spinner">
+        <span class="spinner-icon">⏳</span>
+        <div class="spinner-text" id="loadingText">正在加载...</div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="container">
+    <div class="header">
+        <h1>🏢 厂领导会议管理系统</h1>
+        <div class="header-right">
+            <span id="syncStatus" style="font-size:13px;opacity:0.8;"></span>
+            <button id="unlockBtn" class="unlock-btn" onclick="showPasswordModal()">🔒 解锁编辑</button>
         </div>
     </div>
 
-    <!-- 加载指示器 -->
-    <div class="loading" id="loadingIndicator">
-        ⏳ 正在加载数据...
-    </div>
-    
-    <!-- 保存成功提示 -->
-    <div class="save-notification" id="saveNotification">
-        ✅ 数据已保存到云端！
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('meeting')" id="tab-meeting">📋 会议登记</div>
+        <div class="nav-tab" onclick="switchTab('booking')" id="tab-booking">📅 会议室预定</div>
+        <div class="nav-tab" onclick="switchTab('leader')" id="tab-leader">👥 领导在厂状态</div>
     </div>
 
-    <div class="container">
-        <!-- 导航标签 -->
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('meeting')">📝 会议登记</button>
-            <button class="nav-tab" onclick="switchTab('booking')">📅 会议室预定</button>
-            <button class="nav-tab" onclick="switchTab('status')">👥 领导在厂状态</button>
-            <button id="unlockBtn" onclick="showPasswordModal()" style="margin-left: auto; padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">🔒 解锁编辑</button>
-        </div>
-
-        <!-- 模块一：会议登记 -->
-        <div id="meetingModule" class="module active">
-            <h2>📝 厂领导会议登记</h2>
-            
-            <div class="alert alert-info">
-                💡 添加会议记录后，参会领导状态将自动同步：选择预设会议室 → 标记为"在厂"；选择自定义地点 → 标记为"外出"。
-                <br><br>
-                ✅ <strong>数据已自动保存到云端，所有人刷新页面即可看到更新！</strong>
-            </div>
-            
-            <div class="form-group">
-                <label>会议日期：</label>
-                <input type="date" id="meetingDate">
-                <label>会议时间：</label>
-                <input type="time" id="meetingTime">
-            </div>
-            
-            <div class="form-group">
-                <label>会议名称：</label>
-                <input type="text" id="meetingName" placeholder="请输入会议名称">
-                <label>参会地点：</label>
-                <select id="locationSelect" onchange="checkCustomLocation()" style="flex: 0.5;">
-                    <option value="">-- 选择会议室 --</option>
-                    <option value="二楼中会议室">二楼中会议室</option>
-                    <option value="三楼中会议室">三楼中会议室</option>
-                    <option value="三楼东会议室">三楼东会议室</option>
-                    <option value="四楼党员活动室">四楼党员活动室</option>
-                    <option value="生产指挥中心一楼会议室">生产指挥中心一楼会议室</option>
-                    <option value="生产指挥中心二楼会议室">生产指挥中心二楼会议室</option>
-                    <option value="custom">-- 自定义地点 --</option>
-                </select>
-                <input type="text" id="customLocation" placeholder="请输入自定义地点" style="display: none;">
-            </div>
-            
-            <div class="form-group" style="align-items: flex-start;">
-                <label style="margin-top: 8px;">参会领导：</label>
-                <div class="checkbox-group" id="meetingLeaders">
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader1" value="张威"><label for="m_leader1">张威</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader2" value="郑志强"><label for="m_leader2">郑志强</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader3" value="李晓东"><label for="m_leader3">李晓东</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader4" value="司开国"><label for="m_leader4">司开国</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader5" value="杨洪源"><label for="m_leader5">杨洪源</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader6" value="张延永"><label for="m_leader6">张延永</label></div>
-                    <div class="checkbox-item"><input type="checkbox" id="m_leader7" value="谢敏"><label for="m_leader7">谢敏</label></div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>其他要求：</label>
-                <input type="text" id="meetingRequirements" placeholder="请输入其他要求">
-            </div>
-            
-            <div class="form-group">
-                <button onclick="addMeetingRecord()" style="width: 100%;">➕ 添加会议记录</button>
-            </div>
-
-            <h3>会议台账记录 
-                <button onclick="exportMeetingToExcel()" class="btn-success" style="margin-left: 15px;">📊 导出Excel</button>
-            </h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 50px;"><input type="checkbox" id="selectAllMeeting" onchange="toggleSelectAll('meeting')"></th>
-                        <th>日期</th>
-                        <th>时间</th>
-                        <th>会议名称</th>
-                        <th>参会地点</th>
-                        <th>参会领导</th>
-                        <th>其他要求</th>
-                    </tr>
-                </thead>
-                <tbody id="meetingRecordList"></tbody>
-            </table>
-
-            <div class="operation-module">
-                <span>操作选项：</span>
-                <button class="btn-danger" onclick="deleteSelectedRecords('meeting')">🗑️ 删除选中</button>
-            </div>
-        </div>
-
-        <!-- 模块二：会议室预定 -->
-        <div id="bookingModule" class="module">
-            <h2>📅 会议室预定管理</h2>
-            
-            <div class="alert alert-info">
-                ✅ <strong>数据已自动保存到云端，所有人刷新页面即可看到更新！</strong>
-            </div>
-            
-            <div class="form-group">
-                <label>预定日期：</label>
-                <input type="date" id="bookingDate">
-                <label>开始时间：</label>
-                <input type="time" id="bookingStartTime">
-                <label>结束时间：</label>
-                <input type="time" id="bookingEndTime">
-            </div>
-            
-            <div class="form-group">
-                <label>会议室：</label>
-                <select id="bookingRoomSelect" style="flex: 0.5;">
-                    <option value="">-- 选择会议室 --</option>
-                    <option value="二楼中会议室">二楼中会议室</option>
-                    <option value="三楼中会议室">三楼中会议室</option>
-                    <option value="三楼东会议室">三楼东会议室</option>
-                    <option value="四楼党员活动室">四楼党员活动室</option>
-                    <option value="生产指挥中心一楼会议室">生产指挥中心一楼会议室</option>
-                    <option value="生产指挥中心二楼会议室">生产指挥中心二楼会议室</option>
-                </select>
-                <label>预定人：</label>
-                <input type="text" id="bookingPerson" placeholder="请输入预定人姓名">
-            </div>
-            
-            <div class="form-group">
-                <label>会议主题：</label>
-                <input type="text" id="bookingSubject" placeholder="请输入会议主题">
-            </div>
-            
-            <div class="form-group">
-                <button onclick="addBooking()" style="width: 100%;">➕ 提交预定</button>
-            </div>
-
-            <h3>今日会议室状态</h3>
-            <div id="roomStatusContainer" class="room-status"></div>
-
-            <h3>预定记录 
-                <button onclick="exportBookingToExcel()" class="btn-success" style="margin-left: 15px;">📊 导出Excel</button>
-            </h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 50px;"><input type="checkbox" id="selectAllBooking" onchange="toggleSelectAll('booking')"></th>
-                        <th>日期</th>
-                        <th>时间段</th>
-                        <th>会议室</th>
-                        <th>预定人</th>
-                        <th>会议主题</th>
-                        <th>状态</th>
-                    </tr>
-                </thead>
-                <tbody id="bookingRecordList"></tbody>
-            </table>
-
-            <div class="operation-module">
-                <span>操作选项：</span>
-                <button class="btn-danger" onclick="deleteSelectedRecords('booking')">🗑️ 删除选中</button>
-            </div>
-        </div>
-
-        <!-- 模块三：领导在厂状态 -->
-        <div id="statusModule" class="module">
-            <h2>👥 厂领导在厂状态</h2>
-            
-            <div class="alert alert-info">
-                💡 领导状态会根据会议登记自动同步。也可手动切换状态，手动操作会覆盖自动同步结果。
-                <br><br>
-                ✅ <strong>数据已自动保存到云端，所有人刷新页面即可看到更新！</strong>
-            </div>
-
-            <div class="form-group">
-                <label>快速筛选：</label>
-                <select id="statusFilter" onchange="renderLeaderStatus()">
-                    <option value="all">全部领导</option>
-                    <option value="in">在厂领导</option>
-                    <option value="out">外出领导</option>
+    <div id="module-meeting" class="module">
+        <div class="module-title"><span>📋</span> 厂领导会议登记</div>
+        <div class="hint">💡 添加会议记录后，参会领导状态将自动同步：选择预设会议室 → 标记为"在厂"；选择自定义地点 → 标记为"外出"。</div>
+        <div class="form-grid">
+            <div class="form-group"><label>会议日期</label><input type="date" id="meetingDate"></div>
+            <div class="form-group"><label>会议时间</label><input type="time" id="meetingTime"></div>
+            <div class="form-group"><label>会议名称</label><input type="text" id="meetingName" placeholder="如：生产调度会"></div>
+            <div class="form-group"><label>参会地点</label>
+                <select id="meetingLocation" onchange="toggleCustomLocation()">
+                    <option value="">请选择会议室</option>
+                    <option value="三楼会议室">三楼会议室</option>
+                    <option value="四楼会议室">四楼会议室</option>
+                    <option value="五楼会议室">五楼会议室</option>
+                    <option value="一楼会议室">一楼会议室</option>
+                    <option value="三楼接待室">三楼接待室</option>
+                    <option value="custom">—— 其他地点（自定义）——</option>
                 </select>
             </div>
+        </div>
+        <div class="form-group" id="customLocationGroup" style="display:none; margin-bottom:12px;">
+            <label>自定义地点</label>
+            <input type="text" id="customLocation" placeholder="请输入地点名称">
+        </div>
+        <div class="form-group"><label>参会领导</label></div>
+        <div class="checkbox-grid" id="leaderCheckboxes"></div>
+        <div class="form-group"><label>其他要求</label><textarea id="meetingRemark" rows="2" placeholder="如有其他要求请填写"></textarea></div>
+        <button class="btn btn-primary" onclick="addMeetingRecord()">➕ 添加会议记录</button>
 
-            <div id="leaderStatusContainer" class="status-cards"></div>
-
-            <h3>状态变更记录</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>领导姓名</th>
-                        <th>状态</th>
-                        <th>变更时间</th>
-                        <th>来源</th>
-                        <th>备注</th>
-                    </tr>
-                </thead>
-                <tbody id="statusLogList"></tbody>
+        <div class="filter-bar" style="margin-top:20px;">
+            <input type="date" id="filterMeetingDate" placeholder="筛选日期" onchange="renderMeetingRecords()">
+            <input type="text" id="filterMeetingName" placeholder="搜索会议名称" oninput="renderMeetingRecords()">
+            <button class="btn btn-secondary btn-sm" onclick="clearMeetingFilters()">清除筛选</button>
+        </div>
+        <div class="table-wrap">
+            <table id="meetingTable">
+                <thead><tr><th>日期</th><th>时间</th><th>会议名称</th><th>参会地点</th><th>参会领导</th><th>其他要求</th><th>操作</th></tr></thead>
+                <tbody id="meetingTableBody"></tbody>
             </table>
         </div>
     </div>
 
-    <script>
-        
-        // ==================== 密码保护 ====================
-        const EDIT_PASSWORD = "123456";  // ⚠️ 自定义密码！
-        let isAuthenticated = false;
+    <div id="module-booking" class="module" style="display:none;">
+        <div class="module-title"><span>📅</span> 会议室预定管理</div>
+        <div class="hint">💡 会议室状态每5分钟自动刷新。已预定的会议室显示为"已预定"，空闲的显示为"可用"。</div>
+        <div class="form-grid">
+            <div class="form-group"><label>预定日期</label><input type="date" id="bookingDate"></div>
+            <div class="form-group"><label>开始时间</label><input type="time" id="bookingStart"></div>
+            <div class="form-group"><label>结束时间</label><input type="time" id="bookingEnd"></div>
+            <div class="form-group"><label>会议室</label>
+                <select id="bookingRoom">
+                    <option value="">请选择</option>
+                    <option value="三楼会议室">三楼会议室</option>
+                    <option value="四楼会议室">四楼会议室</option>
+                    <option value="五楼会议室">五楼会议室</option>
+                    <option value="一楼会议室">一楼会议室</option>
+                    <option value="三楼接待室">三楼接待室</option>
+                </select>
+            </div>
+            <div class="form-group"><label>预定人</label><input type="text" id="bookingPerson" placeholder="请输入预定人姓名"></div>
+            <div class="form-group"><label>会议主题</label><input type="text" id="bookingTopic" placeholder="请输入会议主题"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addBooking()">➕ 添加预定</button>
 
+        <div id="roomStatusSection" style="margin-top:20px;">
+            <h4 style="margin-bottom:12px;">📊 今日会议室状态</h4>
+            <div id="roomStatusCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;"></div>
+        </div>
 
-        // ==================== 显示密码弹窗 ====================
-        function showPasswordModal() {
-            document.getElementById('passwordModal').style.display = 'flex';
+        <div class="filter-bar" style="margin-top:16px;">
+            <input type="date" id="filterBookingDate" onchange="renderBookingRecords()">
+            <select id="filterBookingRoom" onchange="renderBookingRecords()">
+                <option value="">所有会议室</option>
+                <option value="三楼会议室">三楼会议室</option>
+                <option value="四楼会议室">四楼会议室</option>
+                <option value="五楼会议室">五楼会议室</option>
+                <option value="一楼会议室">一楼会议室</option>
+                <option value="三楼接待室">三楼接待室</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('filterBookingDate').value='';document.getElementById('filterBookingRoom').value='';renderBookingRecords()">清除</button>
+        </div>
+        <div class="table-wrap">
+            <table id="bookingTable">
+                <thead><tr><th>日期</th><th>时间段</th><th>会议室</th><th>预定人</th><th>会议主题</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody id="bookingTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="module-leader" class="module" style="display:none;">
+        <div class="module-title"><span>👥</span> 厂领导在厂状态</div>
+        <div class="hint">💡 领导状态会根据会议登记自动同步。也可手动切换状态，手动操作会覆盖自动同步结果。</div>
+        <div class="filter-bar">
+            <label style="font-weight:600;">快速筛选：</label>
+            <button class="btn btn-sm btn-secondary" onclick="filterLeader('all')" id="filter-all">全部</button>
+            <button class="btn btn-sm" style="background:#28a745;color:white;" onclick="filterLeader('in')" id="filter-in">在厂</button>
+            <button class="btn btn-sm" style="background:#dc3545;color:white;" onclick="filterLeader('out')" id="filter-out">外出</button>
+        </div>
+        <div class="leader-cards" id="leaderCards"></div>
+        <div style="margin-top:24px;">
+            <h4 style="margin-bottom:12px;">📜 状态变更记录</h4>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>领导姓名</th><th>状态</th><th>变更时间</th><th>来源</th><th>备注</th></tr></thead>
+                    <tbody id="logTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const leaders = ['张威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢敏'];
+let meetingRecords = [];
+let bookingRecords = [];
+let leaderStatus = {};
+let statusLog = [];
+let isAuthenticated = false;
+let currentFilter = 'all';
+const STORAGE_KEY = 'meetingSystemData';
+
+function saveToStorage() {
+    const data = { meetingRecords, bookingRecords, leaderStatus, statusLog };
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        document.getElementById('syncStatus').textContent = '💾 已保存到本地';
+    } catch(e) { console.error('保存失败:', e); }
+}
+
+function loadFromStorage() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const data = JSON.parse(saved);
+            meetingRecords = data.meetingRecords || [];
+            bookingRecords = data.bookingRecords || [];
+            leaderStatus = data.leaderStatus || {};
+            statusLog = data.statusLog || [];
         }
-        
-        function checkPassword() {
-            const input = document.getElementById('passwordInput').value;
-            if (input === EDIT_PASSWORD) {
-                isAuthenticated = true;
-                document.getElementById('passwordModal').style.display = 'none';
-                document.getElementById('unlockBtn').textContent = '🔓 已解锁';
-                document.getElementById('unlockBtn').style.background = '#28a745';
-                showSaveNotification("✅ 已解锁编辑功能！");
-            } else {
-                document.getElementById('passwordError').style.display = 'block';
-                document.getElementById('passwordInput').value = '';
-            }
-        }
-        
-        // ==================== 腾讯云开发 CloudBase ====================
-        const CLOUDBASE_ENV = 'zhongty-d6gysytqj844d3470';
-        let cloudbaseApp = null;
-        let isCloudBaseReady = false;
+    } catch(e) { console.error('加载失败:', e); }
+    leaders.forEach(l => {
+        if (!leaderStatus[l]) leaderStatus[l] = { status: 'in', updateTime: new Date().toLocaleString('zh-CN'), remark: '', source: 'system' };
+    });
+}
 
-        // 初始化 CloudBase
-        async function initCloudBase() {
-            showLoading("正在连接云端...");
-            try {
-                cloudbaseApp = cloudbase.init({env: CLOUDBASE_ENV});
-                // 匿名登录
-                await cloudbaseApp.auth().signInAnonymously();
-                isCloudBaseReady = true;
-                console.log("✅ CloudBase 初始化成功！");
-                // 加载数据
-                await loadDataFromCloud();
-            } catch (error) {
-                console.error("CloudBase 初始化失败：", error);
-                alert("连接云端失败，将使用本地数据。\n错误：" + error.message);
-                hideLoading();
-                // 使用本地数据
-                renderMeetingRecords();
-                renderBookingRecords();
-                renderRoomStatus();
-                renderLeaderStatus();
-                renderStatusLog();
-            }
-        }
-        
-        // ==================== 数据初始化 ====================
-        const leaders = ["张威", "郑志强", "李晓东", "司开国", "杨洪源", "张延永", "谢敏"];
-        const rooms = ["二楼中会议室", "三楼中会议室", "三楼东会议室", "四楼党员活动室", "生产指挥中心一楼会议室", "生产指挥中心二楼会议室"];
-        
-        let meetingRecords = [];
-        let bookingRecords = [];
-        let leaderStatus = {};
-        let statusLog = [];
+function showPasswordModal() {
+    document.getElementById('passwordModal').style.display = 'flex';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordError').style.display = 'none';
+    document.getElementById('passwordInput').focus();
+}
 
-        // ==================== 加载指示器 ====================
-        function showLoading(message = "正在加载数据...") {
-            const indicator = document.getElementById('loadingIndicator');
-            indicator.textContent = message;
-            indicator.classList.add('show');
-        }
+function checkPassword() {
+    const pwd = document.getElementById('passwordInput').value;
+    if (pwd === '123456') {
+        isAuthenticated = true;
+        document.getElementById('passwordModal').style.display = 'none';
+        const btn = document.getElementById('unlockBtn');
+        btn.textContent = '✓ 已解锁';
+        btn.classList.add('unlocked');
+        showToast('✅ 已解锁编辑功能！');
+    } else {
+        document.getElementById('passwordError').style.display = 'block';
+        document.getElementById('passwordInput').value = '';
+    }
+}
 
-        function hideLoading() {
-            const indicator = document.getElementById('loadingIndicator');
-            indicator.classList.remove('show');
-        }
+function showLoading(text) {
+    document.getElementById('loadingText').textContent = text || '加载中...';
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
 
-        function showSaveNotification(message = "✅ 数据已保存到云端！") {
-            const notification = document.getElementById('saveNotification');
-            notification.textContent = message;
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('meetingDate').value = today;
+    document.getElementById('bookingDate').value = today;
+    loadFromStorage();
+    const container = document.getElementById('leaderCheckboxes');
+    leaders.forEach(l => {
+        const div = document.createElement('div');
+        div.className = 'checkbox-item';
+        div.innerHTML = '<label><input type="checkbox" value="' + l + '"> ' + l + '</label>';
+        container.appendChild(div);
+    });
+    renderMeetingRecords();
+    renderBookingRecords();
+    renderRoomStatus();
+    renderLeaderStatus();
+    renderStatusLog();
+    document.getElementById('syncStatus').textContent = '📍 本地存储模式';
+});
 
-        // ==================== 从 CloudBase 读取数据 ====================
-        async function loadDataFromCloud() {
-            if (!isCloudBaseReady) {
-                console.warn("CloudBase 未就绪");
-                return;
-            }
-            
-            showLoading("正在从云端加载数据...");
-            
-            try {
-                const res = await cloudbaseApp.database().collection('MeetingConfig').doc('config').get();
-                
-                if (res.data && res.data.length > 0) {
-                    const data = res.data[0];
-                    meetingRecords = data.meetingRecords || [];
-                    bookingRecords = data.bookingRecords || [];
-                    leaderStatus = data.leaderStatus || {};
-                    statusLog = data.statusLog || [];
-                    
-                    // 初始化领导状态（如果为空）
-                    leaders.forEach(leader => {
-                        if (!leaderStatus[leader]) {
-                            leaderStatus[leader] = { status: 'in', updateTime: new Date().toLocaleString(), remark: '', source: 'system' };
-                        }
-                    });
-                    
-                    // 渲染数据
-                    renderMeetingRecords();
-                    renderBookingRecords();
-                    renderRoomStatus();
-                    renderLeaderStatus();
-                    renderStatusLog();
-                    
-                    hideLoading();
-                    console.log("✅ 数据已从云端加载！");
-                } else {
-                    // 没有云端数据，使用本地数据
-                    console.log("⚠️ 云端无数据，使用本地数据");
-                    hideLoading();
-                }
-            } catch (error) {
-                console.error("加载数据失败：", error);
-                alert("加载云端数据失败！\n错误：" + error.message);
-                hideLoading();
-            }
-        }
+function switchTab(tab) {
+    document.querySelectorAll('.module').forEach(m => m.style.display = 'none');
+    document.getElementById('module-' + tab).style.display = 'block';
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'booking') renderRoomStatus();
+}
 
-        // ==================== 保存数据到 CloudBase ====================
-        async function saveDataToCloud() {
-            if (!isCloudBaseReady) {
-                console.warn("CloudBase 未就绪，保存到本地");
-                // 可以在这里保存到 localStorage 作为备份
-                return;
-            }
-            
-            showLoading("正在保存数据到云端...");
-            
-            try {
-                await cloudbaseApp.database().collection('MeetingConfig').doc('config').set({
-                    meetingRecords: meetingRecords,
-                    bookingRecords: bookingRecords,
-                    leaderStatus: leaderStatus,
-                    statusLog: statusLog,
-                    updateTime: new Date()
-                });
-                
-                hideLoading();
-                showSaveNotification("✅ 数据已保存到云端！其他人刷新页面即可看到更新！");
-                console.log("✅ 数据已保存到云端！");
-            } catch (error) {
-                console.error("保存数据失败：", error);
-                alert("保存数据到云端失败！\n错误：" + error.message);
-                hideLoading();
-            }
-        }
+function toggleCustomLocation() {
+    const sel = document.getElementById('meetingLocation');
+    document.getElementById('customLocationGroup').style.display = sel.value === 'custom' ? 'block' : 'none';
+}
 
-        // ==================== 标签切换 ====================
-        function switchTab(tabName) {
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.module').forEach(mod => mod.classList.remove('active'));
-            
-            document.querySelector(`.nav-tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
-            document.getElementById(`${tabName}Module`).classList.add('active');
-            
-            if (tabName === 'booking') renderRoomStatus();
-            if (tabName === 'status') renderLeaderStatus();
-        }
+function addMeetingRecord() {
+    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
+    const date = document.getElementById('meetingDate').value;
+    const time = document.getElementById('meetingTime').value;
+    const name = document.getElementById('meetingName').value.trim();
+    let location = document.getElementById('meetingLocation').value;
+    if (location === 'custom') location = document.getElementById('customLocation').value.trim();
+    const remark = document.getElementById('meetingRemark').value.trim();
+    const checked = [].map.call(document.querySelectorAll('#leaderCheckboxes input:checked'), c => c.value);
+    if (!date || !time || !name || !location) { showToast('⚠️ 请填写必填项！'); return; }
+    const inRooms = ['三楼会议室','四楼会议室','五楼会议室','一楼会议室','三楼接待室'];
+    const isInFactory = inRooms.indexOf(location) >= 0;
+    const now = new Date().toLocaleString('zh-CN');
+    checked.forEach(l => {
+        if (!leaderStatus[l]) leaderStatus[l] = { status: 'in', updateTime: now, remark: '', source: 'system' };
+        leaderStatus[l].status = isInFactory ? 'in' : 'out';
+        leaderStatus[l].updateTime = now;
+        leaderStatus[l].remark = '会议地点：' + location;
+        leaderStatus[l].source = 'auto';
+        addLog(l, isInFactory ? 'in' : 'out', 'auto', '会议：' + name);
+    });
+    meetingRecords.unshift({ date, time, name, location, leaders: checked, remark });
+    saveToStorage();
+    renderMeetingRecords();
+    renderLeaderStatus();
+    renderStatusLog();
+    showToast('✅ 会议记录已添加！');
+    document.getElementById('meetingName').value = '';
+    document.getElementById('meetingRemark').value = '';
+    [].forEach.call(document.querySelectorAll('#leaderCheckboxes input'), c => c.checked = false);
+}
 
-        // ==================== 模块一：会议登记 ====================
-        function checkCustomLocation() {
-            const select = document.getElementById('locationSelect');
-            const customInput = document.getElementById('customLocation');
-            customInput.style.display = select.value === 'custom' ? 'block' : 'none';
-            if (select.value !== 'custom') customInput.value = '';
-        }
+function deleteMeetingRecord(idx) {
+    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
+    if (confirm('确定要删除这条会议记录吗？')) {
+        meetingRecords.splice(idx, 1);
+        saveToStorage();
+        renderMeetingRecords();
+        showToast('✅ 已删除');
+    }
+}
 
-        function addMeetingRecord() {
-            // 密码检查
-            if (!isAuthenticated) {
-                alert("⚠️ 请输入编辑密码才能编辑！\n\n点击页面中间的密码框输入密码。");
-                return;
-            }
+function renderMeetingRecords() {
+    const fDate = document.getElementById('filterMeetingDate').value;
+    const fName = (document.getElementById('filterMeetingName').value || '').trim().toLowerCase();
+    const rows = meetingRecords.filter(r => {
+        if (fDate && r.date !== fDate) return false;
+        if (fName && r.name.toLowerCase().indexOf(fName) < 0) return false;
+        return true;
+    });
+    const tbody = document.getElementById('meetingTableBody');
+    if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">暂无记录</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map((r, i) => {
+        const realIdx = meetingRecords.indexOf(r);
+        return '<tr><td>' + r.date + '</td><td>' + r.time + '</td><td>' + r.name + '</td><td>' + r.location + '</td><td>' + (r.leaders ? r.leaders.join('、') : '-') + '</td><td>' + (r.remark || '-') + '</td><td><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + realIdx + ')">删除</button></td></tr>';
+    }).join('');
+}
 
-            const date = document.getElementById('meetingDate').value;
-            const time = document.getElementById('meetingTime').value;
-            const name = document.getElementById('meetingName').value;
-            const locationSelect = document.getElementById('locationSelect').value;
-            const customLocation = document.getElementById('customLocation').value;
-            const location = locationSelect === 'custom' ? customLocation : locationSelect;
+function clearMeetingFilters() {
+    document.getElementById('filterMeetingDate').value = '';
+    document.getElementById('filterMeetingName').value = '';
+    renderMeetingRecords();
+}
 
-            const leadersArr = [];
-            document.querySelectorAll('#meetingLeaders input[type="checkbox"]:checked').forEach(cb => {
-                leadersArr.push(cb.value);
-            });
-            const leadersStr = leadersArr.join('  ');
+function addBooking() {
+    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
+    const date = document.getElementById('bookingDate').value;
+    const start = document.getElementById('bookingStart').value;
+    const end = document.getElementById('bookingEnd').value;
+    const room = document.getElementById('bookingRoom').value;
+    const person = document.getElementById('bookingPerson').value.trim();
+    const topic = document.getElementById('bookingTopic').value.trim();
+    if (!date || !start || !end || !room || !person) { showToast('⚠️ 请填写必填项！'); return; }
+    if (start >= end) { showToast('⚠️ 结束时间必须晚于开始时间！'); return; }
+    bookingRecords.unshift({ date, start, end, room, person, topic, status: 'confirmed' });
+    saveToStorage();
+    renderBookingRecords();
+    renderRoomStatus();
+    showToast('✅ 会议室预定成功！');
+    document.getElementById('bookingPerson').value = '';
+    document.getElementById('bookingTopic').value = '';
+}
 
-            const requirements = document.getElementById('meetingRequirements').value;
+function deleteBooking(idx) {
+    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
+    if (confirm('确定要删除这条预定吗？')) {
+        bookingRecords.splice(idx, 1);
+        saveToStorage();
+        renderBookingRecords();
+        renderRoomStatus();
+        showToast('✅ 已删除');
+    }
+}
 
-            if (!date || !time || !name || !location) {
-                alert("请填写完整的会议信息（日期、时间、名称、地点为必填）！");
-                return;
-            }
+function renderBookingRecords() {
+    const fDate = document.getElementById('filterBookingDate').value;
+    const fRoom = document.getElementById('filterBookingRoom').value;
+    const rows = bookingRecords.filter(r => {
+        if (fDate && r.date !== fDate) return false;
+        if (fRoom && r.room !== fRoom) return false;
+        return true;
+    });
+    const tbody = document.getElementById('bookingTableBody');
+    if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:20px;">暂无预定记录</td></tr>';
+        return;
+    }
+    tbody.innerHTML = rows.map(r => {
+        const realIdx = bookingRecords.indexOf(r);
+        return '<tr><td>' + r.date + '</td><td>' + r.start + ' - ' + r.end + '</td><td>' + r.room + '</td><td>' + r.person + '</td><td>' + (r.topic || '-') + '</td><td><span class="badge badge-confirmed">已预定</span></td><td><button class="btn btn-danger btn-sm" onclick="deleteBooking(' + realIdx + ')">删除</button></td></tr>';
+    }).join('');
+}
 
-            if (leadersArr.length === 0) {
-                alert("请至少选择一位参会领导！");
-                return;
-            }
+function renderRoomStatus() {
+    const today = new Date().toISOString().split('T')[0];
+    const rooms = ['三楼会议室','四楼会议室','五楼会议室','一楼会议室','三楼接待室'];
+    const todayBooks = bookingRecords.filter(b => b.date === today);
+    const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    const container = document.getElementById('roomStatusCards');
+    container.innerHTML = rooms.map(room => {
+        const booked = todayBooks.some(b => b.room === room && b.start <= now && b.end > now);
+        const bookInfo = booked ? todayBooks.find(b => b.room === room && b.start <= now && b.end > now) : null;
+        return '<div style="padding:12px;border-radius:8px;background:' + (booked ? '#fff3cd' : '#d4edda') + ';border:2px solid ' + (booked ? '#ffc107' : '#28a745') + ';text-align:center;"><div style="font-weight:600;">' + room + '</div><div style="margin-top:6px;font-size:13px;">' + (booked ? '⚠️ 使用中' : '✅ 可用') + '</div>' + (bookInfo ? '<div style="font-size:11px;color:#666;margin-top:4px;">' + (bookInfo.topic || '') + '</div>' : '') + '</div>';
+    }).join('');
+}
 
-            meetingRecords.push({
-                id: Date.now(),
-                date, time, name, location, leaders: leadersStr
-            });
+function filterLeader(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-bar .btn').forEach(b => {
+        b.style.background = '#6c757d';
+        b.style.color = 'white';
+    });
+    const btn = document.getElementById('filter-' + filter);
+    if (filter === 'in') btn.style.background = '#28a745';
+    if (filter === 'out') btn.style.background = '#dc3545';
+    renderLeaderStatus();
+}
 
-            // 自动同步领导在厂状态
-            syncLeaderStatusFromMeeting(leadersArr, location);
+function toggleLeaderStatus(name) {
+    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
+    const current = (leaderStatus[name] && leaderStatus[name].status) || 'in';
+    const now = new Date().toLocaleString('zh-CN');
+    const newStatus = current === 'in' ? 'out' : 'in';
+    leaderStatus[name] = {
+        status: newStatus,
+        updateTime: now,
+        remark: (leaderStatus[name] && leaderStatus[name].remark) || '',
+        source: 'manual'
+    };
+    addLog(name, newStatus, 'manual', leaderStatus[name].remark || '手动切换');
+    saveToStorage();
+    renderLeaderStatus();
+    renderStatusLog();
+    showToast('✅ ' + name + '已标记为"' + (newStatus === 'in' ? '在厂' : '外出') + '"');
+}
 
-            clearMeetingForm();
-            renderMeetingRecords();
-            
-            // 保存到云端
-            saveDataToCloud();
-        }
+function renderLeaderStatus() {
+    const container = document.getElementById('leaderCards');
+    const cards = leaders.map(l => {
+        const s = leaderStatus[l] || { status: 'in' };
+        const isIn = s.status === 'in';
+        if (currentFilter !== 'all' && ((currentFilter === 'in' && !isIn) || (currentFilter === 'out' && isIn))) return '';
+        return '<div class="leader-card ' + (isIn ? 'in-house' : 'out') + '" onclick="toggleLeaderStatus(\'' + l + '\')"><div class="name">' + l + '</div><div class="status">' + (isIn ? '🟢 在厂' : '🔴 外出') + '</div><div class="time">' + (s.updateTime || '-') + '</div></div>';
+    }).join('');
+    container.innerHTML = cards || '<div style="color:#999;padding:20px;">暂无数据</div>';
+}
 
-        // 根据会议登记自动同步领导状态
-        function syncLeaderStatusFromMeeting(leaderArr, location) {
-            // 判断是否为自定义地点（不在预设会议室列表中即为外出）
-            const isCustomLocation = !rooms.includes(location);
-            const newStatus = isCustomLocation ? 'out' : 'in';
-            const statusText = isCustomLocation ? '外出' : '在厂';
-            const remark = isCustomLocation ? `参加会议，地点：${location}` : `参加会议，地点：${location}`;
+function addLog(name, status, source, remark) {
+    const time = new Date().toLocaleString('zh-CN');
+    statusLog.unshift({ name, status, time, source, remark });
+    if (statusLog.length > 100) statusLog = statusLog.slice(0, 100);
+}
 
-            leaderArr.forEach(leader => {
-                const oldStatus = leaderStatus[leader]?.status || 'in';
-                
-                // 只有状态发生变化时才更新
-                if (oldStatus !== newStatus) {
-                    leaderStatus[leader] = {
-                        status: newStatus,
-                        updateTime: new Date().toLocaleString(),
-                        remark: remark,
-                        source: 'meeting'  // 标记来源为会议登记
-                    };
-
-                    // 记录状态变更日志
-                    statusLog.unshift({
-                        leader,
-                        status: newStatus,
-                        time: new Date().toLocaleString(),
-                        source: '会议登记',
-                        remark: remark
-                    });
-                }
-            });
-
-            // 保留最近100条日志
-            statusLog = statusLog.slice(0, 100);
-        }
-
-        function clearMeetingForm() {
-            document.getElementById('meetingName').value = '';
-            document.getElementById('meetingRequirements').value = '';
-            document.getElementById('customLocation').value = '';
-            document.getElementById('locationSelect').value = '';
-            document.querySelectorAll('#meetingLeaders input[type="checkbox"]').forEach(cb => cb.checked = false);
-        }
-
-        function formatLeaderNames(namesStr) {
-            if (!namesStr) return '';
-            return namesStr.split(/\s+/).filter(n => n.length > 0).join('  ');
-        }
-
-        function formatDateDisplay(dateStr) {
-            const date = new Date(dateStr);
-            return `${date.getMonth() + 1}月${date.getDate()}日`;
-        }
-
-        function renderMeetingRecords() {
-            const tbody = document.getElementById('meetingRecordList');
-            tbody.innerHTML = '';
-            meetingRecords.sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time));
-
-            let lastDate = '';
-            meetingRecords.forEach(record => {
-                if (record.date !== lastDate) {
-                    tbody.innerHTML += `<tr class="day-separator"><td colspan="7">会议提醒</td></tr>`;
-                    tbody.innerHTML += `<tr class="daily-header">
-                        <th><input type="checkbox" disabled></th>
-                        <th>日期</th><th>时间</th><th>会议名称</th>
-                        <th>参会地点</th><th>参会领导</th><th>其他要求</th>
-                    </tr>`;
-                    lastDate = record.date;
-                }
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><input type="checkbox" class="record-checkbox" data-module="meeting" value="${record.id}"></td>
-                        <td>${formatDateDisplay(record.date)}</td>
-                        <td>${record.time}</td>
-                        <td>${record.name}</td>
-                        <td>${record.location}</td>
-                        <td>${formatLeaderNames(record.leaders)}</td>
-                        <td>${record.requirements || '-'}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // ==================== 模块二：会议室预定 ====================
-        function addBooking() {
-            // 密码检查
-            if (!isAuthenticated) {
-                alert("⚠️ 请输入编辑密码才能编辑！\n\n点击页面中间的密码框输入密码。");
-                return;
-            }
-
-            const date = document.getElementById('bookingDate').value;
-            const startTime = document.getElementById('bookingStartTime').value;
-            const endTime = document.getElementById('bookingEndTime').value;
-            const room = document.getElementById('bookingRoomSelect').value;
-            const person = document.getElementById('bookingPerson').value;
-            const subject = document.getElementById('bookingSubject').value;
-
-            if (!date || !startTime || !endTime || !room || !person) {
-                alert("请填写完整的预定信息！");
-                return;
-            }
-
-            if (startTime >= endTime) {
-                alert("结束时间必须晚于开始时间！");
-                return;
-            }
-
-            // 检查时间冲突
-            const conflict = bookingRecords.some(b => 
-                b.room === room && b.date === date && b.status !== 'cancelled' &&
-                !((endTime <= b.startTime) || (startTime >= b.endTime))
-            );
-
-            if (conflict) {
-                if (!confirm("该时间段会议室已被预定，是否仍要提交？")) {
-                    return;
-                }
-            }
-
-            bookingRecords.push({
-                id: Date.now(),
-                date, startTime, endTime, room, person, subject, status: 'confirmed'
-            });
-
-            clearBookingForm();
-            renderBookingRecords();
-            renderRoomStatus();
-            
-            // 保存到云端
-            saveDataToCloud();
-        }
-
-        function clearBookingForm() {
-            document.getElementById('bookingStartTime').value = '';
-            document.getElementById('bookingEndTime').value = '';
-            document.getElementById('bookingRoomSelect').value = '';
-            document.getElementById('bookingPerson').value = '';
-            document.getElementById('bookingSubject').value = '';
-        }
-
-        function renderRoomStatus() {
-            const container = document.getElementById('roomStatusContainer');
-            const today = document.getElementById('bookingDate').value || new Date().toISOString().split('T')[0];
-            container.innerHTML = '';
-
-            rooms.forEach(room => {
-                const todayBookings = bookingRecords.filter(b => b.room === room && b.date === today && b.status !== 'cancelled');
-                const isAvailable = todayBookings.length === 0;
-
-                let timeInfo = '暂无预定';
-                if (todayBookings.length > 0) {
-                    timeInfo = todayBookings.map(b => `${b.startTime}-${b.endTime} ${b.subject}`).join('；');
-                }
-
-                container.innerHTML += `
-                    <div class="room-card ${isAvailable ? 'available' : 'occupied'}">
-                        <div class="room-name">${room}</div>
-                        <div class="room-info">
-                            <span>状态：${isAvailable ? '✅ 空闲' : '🔴 已预定'}</span>
-                            <span>预定信息：${timeInfo}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function renderBookingRecords() {
-            const tbody = document.getElementById('bookingRecordList');
-            tbody.innerHTML = '';
-            bookingRecords.sort((a, b) => new Date(a.date + ' ' + a.startTime) - new Date(b.date + ' ' + b.startTime));
-
-            bookingRecords.forEach(record => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><input type="checkbox" class="record-checkbox" data-module="booking" value="${record.id}"></td>
-                        <td>${formatDateDisplay(record.date)}</td>
-                        <td>${record.startTime} - ${record.endTime}</td>
-                        <td>${record.room}</td>
-                        <td>${record.person}</td>
-                        <td>${record.subject}</td>
-                        <td>${record.status === 'confirmed' ? '✅ 已确认' : '❌ 已取消'}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // ==================== 模块三：领导在厂状态 ====================
-        function toggleLeaderStatus(leader) {
-            const current = leaderStatus[leader].status;
-            const newStatus = current === 'in' ? 'out' : 'in';
-            const statusText = newStatus === 'in' ? '在厂' : '外出';
-            const remark = prompt(`请输入状态变更备注（可选）：`, '');
-
-            leaderStatus[leader] = {
-                status: newStatus,
-                updateTime: new Date().toLocaleString(),
-                remark: remark || '',
-                source: 'manual'  // 标记为手动操作
-            };
-
-            statusLog.unshift({
-                leader,
-                status: newStatus,
-                time: new Date().toLocaleString(),
-                source: '手动操作',
-                remark: remark || '-'
-            });
-
-            // 保留最近100条日志
-            statusLog = statusLog.slice(0, 100);
-
-            renderLeaderStatus();
-            renderStatusLog();
-            
-            // 保存到云端
-            saveDataToCloud();
-        }
-
-        function renderLeaderStatus() {
-            const container = document.getElementById('leaderStatusContainer');
-            const filter = document.getElementById('statusFilter').value;
-            container.innerHTML = '';
-
-            leaders.forEach(leader => {
-                const status = leaderStatus[leader];
-                if (filter !== 'all' && status.status !== filter) return;
-
-                container.innerHTML += `
-                    <div class="status-card ${status.status}">
-                        <div class="name">${leader}</div>
-                        <div class="status">${status.status === 'in' ? '✅ 在厂' : '🚪 外出'}</div>
-                        <div class="time">更新于：${status.updateTime}</div>
-                        <div class="sync-tip">来源：${status.source === 'meeting' ? '会议登记' : (status.source === 'manual' ? '手动操作' : '系统默认')}</div>
-                        <button class="toggle-btn ${status.status}" onclick="toggleLeaderStatus('${leader}')" style="margin-top: 10px;">
-                            切换为${status.status === 'in' ? '外出' : '在厂'}
-                        </button>
-                    </div>
-                `;
-            });
-        }
-
-        function renderStatusLog() {
-            const tbody = document.getElementById('statusLogList');
-            tbody.innerHTML = '';
-            statusLog.forEach(log => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${log.leader}</td>
-                        <td>${log.status === 'in' ? '✅ 在厂' : '🚪 外出'}</td>
-                        <td>${log.time}</td>
-                        <td>${log.source}</td>
-                        <td>${log.remark}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        // ==================== 通用功能 ====================
-        function toggleSelectAll(module) {
-            const selectAll = document.getElementById(`selectAll${module.charAt(0).toUpperCase() + module.slice(1)}`);
-            document.querySelectorAll(`.record-checkbox[data-module="${module}"]`).forEach(cb => cb.checked = selectAll.checked);
-        }
-
-        function deleteSelectedRecords(module) {
-            const checkboxes = document.querySelectorAll(`.record-checkbox[data-module="${module}"]:checked`);
-            if (checkboxes.length === 0) {
-                alert("请先勾选需要删除的记录！");
-                return;
-            }
-
-            if (confirm(`确定要删除选中的 ${checkboxes.length} 条记录吗？`)) {
-                const selectedIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
-                if (module === 'meeting') {
-                    meetingRecords = meetingRecords.filter(r => !selectedIds.includes(r.id));
-                    renderMeetingRecords();
-                } else if (module === 'booking') {
-                    bookingRecords = bookingRecords.filter(r => !selectedIds.includes(r.id));
-                    renderBookingRecords();
-                    renderRoomStatus();
-                }
-                
-                // 保存到云端
-                saveDataToCloud();
-            }
-        }
-
-        function exportMeetingToExcel() {
-            if (meetingRecords.length === 0) {
-                alert("当前没有会议记录，无法导出！");
-                return;
-            }
-            const exportData = meetingRecords.map(item => ({
-                "日期": item.date, "时间": item.time, "会议名称": item.name,
-                "参会地点": item.location, "参会领导": item.leaders, "其他要求": item.requirements || '-'
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "会议台账");
-            XLSX.writeFile(wb, "厂领导会议台账.xlsx");
-        }
-
-        function exportBookingToExcel() {
-            if (bookingRecords.length === 0) {
-                alert("当前没有预定记录，无法导出！");
-                return;
-            }
-            const exportData = bookingRecords.map(item => ({
-                "日期": item.date, "时间段": `${item.startTime}-${item.endTime}`, "会议室": item.room,
-                "预定人": item.person, "会议主题": item.subject, "状态": item.status === 'confirmed' ? '已确认' : '已取消'
-            }));
-            const ws = XLSX.utils.json_to_sheet(exportData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "会议室预定");
-            XLSX.writeFile(wb, "会议室预定记录.xlsx");
-        }
-
-        // ==================== 页面加载初始化 ====================
-        document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('meetingDate').value = today;
-            document.getElementById('bookingDate').value = today;
-            
-            // 初始化 CloudBase 并加载数据
-            initCloudBase();
-        });
-    </script>
+function renderStatusLog() {
+    const tbody = document.getElementById('logTableBody');
+    if (statusLog.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">暂无记录</td></tr>';
+        return;
+    }
+    tbody.innerHTML = statusLog.map(l => '<tr><td>' + l.name + '</td><td><span class="badge ' + (l.status === 'in' ? 'badge-in' : 'badge-out') + '">' + (l.status === 'in' ? '在厂' : '外出') + '</span></td><td>' + l.time + '</td><td>' + (l.source === 'manual' ? '🖱️ 手动' : '🤖 自动') + '</td><td>' + (l.remark || '-') + '</td></tr>').join('');
+}
+</script>
 </body>
 </html>
