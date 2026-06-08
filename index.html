@@ -77,6 +77,119 @@
             .leader-cards { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
+
+<script>
+// ==================== GitHub 私有仓库云同步 ====================
+const GITHUB = {
+    owner: 'zhongty1998',
+    repo: 'meeting-data',
+    path: 'data.json',
+    token: '{{3ErMGh4UccoRJy8aAe5ImE0S8ov}}',
+    branch: 'main',
+    sha: null,
+    baseUrl: 'https://api.github.com'
+};
+
+let cloudStatus = 'local'; // 'local' | 'synced' | 'syncing' | 'error'
+
+async function githubLoad() {
+    setStatus('syncing');
+    try {
+        const r = await fetch(`${GITHUB.baseUrl}/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${GITHUB.path}?ref=${GITHUB.branch}`, {
+            headers: { 'Authorization': 'token ' + GITHUB.token, 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (r.ok) {
+            const d = await r.json();
+            GITHUB.sha = d.sha;
+            const text = atob(d.content.replace(/\n/g, ''));
+            const data = JSON.parse(text);
+            meetingRecords = data.meetingRecords || [];
+            bookingRecords = data.bookingRecords || [];
+            leaderStatus = data.leaderStatus || {};
+            statusLog = data.statusLog || [];
+            // 保存到本地
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            setStatus('synced');
+            showToast('✅ 云端数据加载成功！');
+            return true;
+        } else if (r.status === 404) {
+            // 文件不存在，使用本地数据
+            setStatus('local');
+            showToast('📍 未找到云端数据，使用本地数据');
+            return false;
+        }
+    } catch(e) {
+        console.warn('云端加载失败:', e);
+    }
+    setStatus('local');
+    return false;
+}
+
+async function githubSave() {
+    setStatus('syncing');
+    try {
+        const data = {
+            meetingRecords: meetingRecords,
+            bookingRecords: bookingRecords,
+            leaderStatus: leaderStatus,
+            statusLog: statusLog
+        };
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+        const body = { message: '更新会议数据 ' + new Date().toLocaleString('zh-CN'), content: content, branch: GITHUB.branch };
+        if (GITHUB.sha) body.sha = GITHUB.sha;
+        const r = await fetch(`${GITHUB.baseUrl}/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${GITHUB.path}`, {
+            method: 'PUT',
+            headers: { 'Authorization': 'token ' + GITHUB.token, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' },
+            body: JSON.stringify(body)
+        });
+        if (r.ok || r.status === 200 || r.status === 201) {
+            const d = await r.json();
+            GITHUB.sha = d.content.sha;
+            setStatus('synced');
+            showToast('✅ 数据已同步到云端！');
+            return true;
+        } else {
+            const err = await r.json();
+            console.error('保存失败:', err);
+            setStatus('error');
+            showToast('⚠️ 云端同步失败: ' + (err.message || r.status));
+            return false;
+        }
+    } catch(e) {
+        console.error('云端保存失败:', e);
+        setStatus('error');
+        showToast('⚠️ 云端同步失败！');
+        return false;
+    }
+}
+
+function setStatus(s) {
+    cloudStatus = s;
+    const el = document.getElementById('cloudStatusEl');
+    if (!el) return;
+    if (s === 'syncing') {
+        el.textContent = '⏳ 同步中...';
+        el.style.color = '#ffc107';
+    } else if (s === 'synced') {
+        el.textContent = '☁️ 已同步';
+        el.style.color = '#28a745';
+    } else if (s === 'error') {
+        el.textContent = '❌ 同步失败';
+        el.style.color = '#dc3545';
+    } else {
+        el.textContent = '💾 本地模式';
+        el.style.color = 'rgba(255,255,255,0.7)';
+    }
+}
+
+// 自动保存拦截：在原有保存后自动云同步
+const origSaveToStorage = saveToStorage;
+saveToStorage = function() {
+    origSaveToStorage.call(this);
+    // 后台云同步
+    githubSave().catch(() => {});
+};
+</script>
 </head>
 <body>
 
@@ -294,11 +407,12 @@ function showToast(msg) {
     setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('meetingDate').value = today;
     document.getElementById('bookingDate').value = today;
-    loadFromStorage();
+    
+    // 渲染领导复选框
     const container = document.getElementById('leaderCheckboxes');
     leaders.forEach(l => {
         const div = document.createElement('div');
@@ -306,12 +420,26 @@ document.addEventListener('DOMContentLoaded', () => {
         div.innerHTML = '<label><input type="checkbox" value="' + l + '"> ' + l + '</label>';
         container.appendChild(div);
     });
+    
+    // 先从本地加载（立即显示）
+    loadFromStorage();
     renderMeetingRecords();
     renderBookingRecords();
     renderRoomStatus();
     renderLeaderStatus();
     renderStatusLog();
-    document.getElementById('syncStatus').textContent = '📍 本地存储模式';
+    
+    // 再从 GitHub 云端同步（静默后台）
+    await githubLoad();
+    
+    // 重新渲染（以云端数据为准）
+    renderMeetingRecords();
+    renderBookingRecords();
+    renderRoomStatus();
+    renderLeaderStatus();
+    renderStatusLog();
+    
+    document.getElementById('syncStatus').textContent = '💾 加载中...';
 });
 
 function switchTab(tab) {
