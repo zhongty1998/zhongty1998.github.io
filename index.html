@@ -513,7 +513,7 @@ function renderMeetingRecords() {
     }
     
     // 按日期排序（最新在前）
-    const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+    const sortedDates = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
     
     let html_content = '';
     sortedDates.forEach(dateKey => {
@@ -529,7 +529,7 @@ function renderMeetingRecords() {
             html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
         
         // 该日期下的会议记录
-        grouped[dateKey].forEach(r => {
+        grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
             html_content += '<tr>';
             // 日期已在分组标题中显示，不再重复
             html_content += '<td>' + r.time + '</td>';
