@@ -747,7 +747,7 @@ function exportMeetingLog() {
             csv += r.time + ',';
             csv += '"' + (r.name || '').replace(/"/g, '""') + '",';
             csv += '"' + (r.location || '').replace(/"/g, '""') + '",';
-            csv += '"' + (r.leaders ? r.leaders.join('、') : '').replace(/"/g, '""') + '",';
+            csv += '"' + (r.leaders ? r.leaders.join(' ') : '').replace(/"/g, '""') + '",';
             csv += '"' + (r.remark || '').replace(/"/g, '""') + '"';
             csv += '\n';
         });
