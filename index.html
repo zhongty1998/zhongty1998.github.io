@@ -37,8 +37,8 @@
         .checkbox-item input { width: 16px; height: 16px; cursor: pointer; }
         .table-wrap { overflow-x: auto; margin-top: 16px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { background: #667eea; color: #1a1a2e; padding: 12px 8px; text-align: center; white-space: nowrap; }
-        td { padding: 10px 8px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        th { background: #667eea; color: #1a1a2e; padding: 12px 6px; text-align: center; white-space: nowrap; font-size: 13px; }
+        td { padding: 10px 6px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 13px; }
         tr:hover { background: #f8f9fa; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .badge-in { background: #d4edda; color: #155724; }
@@ -64,7 +64,7 @@
         .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
         .filter-bar input, .filter-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         .leader-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
-        .leader-card { padding: 16px; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
+        .leader-card { padding: 16px; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; width: calc(50% - 12px); box-sizing: border-box; display: inline-block; margin: 4px; }
         .leader-card.in-house { background: linear-gradient(135deg, #d4edda, #c3e6cb); border-color: #28a745; }
         .leader-card.out { background: linear-gradient(135deg, #f8d7da, #f5c6cb); border-color: #dc3545; }
         .leader-card .name { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
@@ -230,7 +230,7 @@
 <script>
 
 // ==================== 全局变量 ====================
-const leaders = ['张威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢敏'];
+const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏'];
 let meetingRecords = [];
 let bookingRecords = [];
 let leaderStatus = {};
@@ -494,13 +494,10 @@ function renderMeetingRecords() {
     const fDate = document.getElementById('filterMeetingDate').value;
     const fName = document.getElementById('filterMeetingName').value.toLowerCase();
     
-    // 按日期分组
     const grouped = {};
     meetingRecords.forEach((r, idx) => {
-        // 应用过滤
         if (fDate && r.date !== fDate) return;
         if (fName && r.name.toLowerCase().indexOf(fName) < 0) return;
-        
         const dateKey = r.date || '';
         if (!grouped[dateKey]) grouped[dateKey] = [];
         grouped[dateKey].push({...r, originalIndex: idx});
@@ -512,43 +509,73 @@ function renderMeetingRecords() {
         return;
     }
     
-    // 按日期排序（最新在前）
     const sortedDates = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
-    
+    const today = new Date().toISOString().split('T')[0];
+    const pastDates = sortedDates.filter(d => d < today);
+    const futureDates = sortedDates.filter(d => d >= today);
     let html_content = '';
-    sortedDates.forEach(dateKey => {
-        // 格式化日期：去掉年份，改为 xx月xx日
-        let displayDate = dateKey;
-        const m = dateKey.match(/(\d{4})-(\d{2})-(\d{2})/);
-        if (m) {
-            displayDate = parseInt(m[2]) + '月' + parseInt(m[3]) + '日';
-        }
-        
-        // 添加日期分隔行
+    
+    // 未来/今日会议
+    futureDates.forEach(dateKey => {
+        const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
+        const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
         html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #007bff;">📅 会议提醒 (' + displayDate + ')</td></tr>';
-            html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
-        
-        // 该日期下的会议记录
+        html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
         grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
             html_content += '<tr>';
-            // 日期已在分组标题中显示，不再重复
             html_content += '<td>' + r.time + '</td>';
             html_content += '<td>' + r.name + '</td>';
             html_content += '<td>' + r.location + '</td>';
-            html_content += '<td>' + (r.leaders ? r.leaders.join('、') : '-') + '</td>';
+            html_content += '<td>' + (r.leaders ? r.leaders.join('&nbsp;&nbsp;') : '-') + '</td>';
             html_content += '<td>' + (r.remark || '-') + '</td>';
             html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
             html_content += '</tr>';
         });
-        
-        // 添加空行
-        html_content += '<tr class="date-gap"><td colspan="6" style="height:15px;background:#fff;"></td></tr>';
+        html_content += '<tr class="date-gap"><td colspan="6" style="height:12px;background:#f9f9f9;"></td></tr>';
     });
+    
+    // 过往会议折叠
+    if (pastDates.length > 0) {
+        const totalPast = pastDates.reduce((s, d) => s + grouped[d].length, 0);
+        html_content += '<tr id="pastMeetingsToggle" style="cursor:pointer;" onclick="togglePastMeetings()"><td colspan="6" style="text-align:center;padding:12px;background:#e9ecef;border-radius:8px;color:#495057;font-size:14px;font-weight:500;">📋 查看历史会议（' + pastDates.length + ' 天，共 ' + totalPast + ' 条）▾</td></tr>';
+        html_content += '<tbody id="pastMeetingsBody" style="display:none;">';
+        pastDates.forEach(dateKey => {
+            const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
+            const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
+            html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">📅 会议提醒 (' + displayDate + ')</td></tr>';
+            html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
+            grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
+                html_content += '<tr>';
+                html_content += '<td>' + r.time + '</td>';
+                html_content += '<td>' + r.name + '</td>';
+                html_content += '<td>' + r.location + '</td>';
+                html_content += '<td>' + (r.leaders ? r.leaders.join('&nbsp;&nbsp;') : '-') + '</td>';
+                html_content += '<td>' + (r.remark || '-') + '</td>';
+                html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
+                html_content += '</tr>';
+            });
+            html_content += '<tr class="date-gap"><td colspan="6" style="height:12px;background:#f9f9f9;"></td></tr>';
+        });
+        html_content += '</tbody>';
+    }
     
     tbody.innerHTML = html_content;
 }
 
-
+function togglePastMeetings() {
+    const body = document.getElementById('pastMeetingsBody');
+    const toggle = document.getElementById('pastMeetingsToggle');
+    if (!body || !toggle) return;
+    const td = toggle.querySelector('td');
+    if (!td) return;
+    if (body.style.display === 'none' || body.style.display === '') {
+        body.style.display = '';
+        td.innerHTML = '📋 收起历史会议 ▴';
+    } else {
+        body.style.display = 'none';
+        td.innerHTML = '📋 查看历史会议（' + pastDates.length + ' 天，共 ' + totalPast + ' 条）▾';
+    }
+}
 
 function clearMeetingFilters() { document.getElementById('filterMeetingDate').value = ''; document.getElementById('filterMeetingName').value = ''; renderMeetingRecords(); }
 
