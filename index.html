@@ -546,7 +546,7 @@ function renderMeetingRecords() {
         html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
         grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
             html_content += '<tr>';
-            html_content += '<td>' + r.time + '</td>';
+            html_content += '<td>' + (r.time ? r.time.replace(/^0(\d):/, '$1:') : '') + '</td>';
             html_content += '<td>' + r.name + '</td>';
             html_content += '<td>' + r.location + '</td>';
             html_content += '<td class="leaders-cell"><div class="leaders-grid">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
@@ -569,7 +569,7 @@ function renderMeetingRecords() {
             html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
             grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
                 html_content += '<tr>';
-                html_content += '<td>' + r.time + '</td>';
+                html_content += '<td>' + (r.time ? r.time.replace(/^0(\d):/, '$1:') : '') + '</td>';
                 html_content += '<td>' + r.name + '</td>';
                 html_content += '<td>' + r.location + '</td>';
                 html_content += '<td class="leaders-cell"><div class="leaders-grid">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
