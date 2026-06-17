@@ -542,7 +542,7 @@ function renderMeetingRecords() {
     futureDates.forEach(dateKey => {
         const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
         const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
-        html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #007bff;">📅 会议提醒 (' + displayDate + ')</td></tr>';
+        html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #007bff;">会议提醒 (' + displayDate + ')</td></tr>';
         html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
         grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
             html_content += '<tr>';
@@ -565,7 +565,7 @@ function renderMeetingRecords() {
         pastDates.forEach(dateKey => {
             const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
             const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
-            html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">📅 会议提醒 (' + displayDate + ')</td></tr>';
+            html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">会议提醒 (' + displayDate + ')</td></tr>';
             html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
             grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
                 html_content += '<tr>';
