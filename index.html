@@ -39,6 +39,24 @@
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
         th { background: #667eea; color: #1a1a2e; padding: 12px 6px; text-align: center; white-space: nowrap; font-size: 13px; }
         td { padding: 10px 6px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 13px; }
+    td:has(.leader-tag) {        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .leader-tag {
+        display: inline-block;
+        width: calc(50% - 4px);
+        text-align: center;
+        background: #e3f2fd;
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 12px;
+        box-sizing: border-box;
+    }
+    .leader-tag:last-child:nth-child(odd) {
+        width: calc(100% - 4px);
+    }
+    }
         tr:hover { background: #f8f9fa; }
         .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .badge-in { background: #d4edda; color: #155724; }
@@ -526,7 +544,7 @@ function renderMeetingRecords() {
             html_content += '<td>' + r.time + '</td>';
             html_content += '<td>' + r.name + '</td>';
             html_content += '<td>' + r.location + '</td>';
-            html_content += '<td>' + (r.leaders ? r.leaders.join('&nbsp;&nbsp;') : '-') + '</td>';
+            html_content += '<td>' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
             html_content += '<td>' + (r.remark || '-') + '</td>';
             html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
             html_content += '</tr>';
@@ -549,7 +567,7 @@ function renderMeetingRecords() {
                 html_content += '<td>' + r.time + '</td>';
                 html_content += '<td>' + r.name + '</td>';
                 html_content += '<td>' + r.location + '</td>';
-                html_content += '<td>' + (r.leaders ? r.leaders.join('&nbsp;&nbsp;') : '-') + '</td>';
+                html_content += '<td>' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
                 html_content += '<td>' + (r.remark || '-') + '</td>';
                 html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
                 html_content += '</tr>';
