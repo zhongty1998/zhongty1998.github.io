@@ -40,10 +40,12 @@
         th { background: #667eea; color: #1a1a2e; padding: 12px 6px; text-align: center; white-space: nowrap; font-size: 13px; }
         td { padding: 10px 6px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 13px; }
     td.leaders-cell {
+        padding: 6px 4px !important;
+    }
+    .leaders-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 4px;
-        padding: 6px 4px !important;
     }
     .leader-tag {
         display: block;
@@ -543,7 +545,7 @@ function renderMeetingRecords() {
             html_content += '<td>' + r.time + '</td>';
             html_content += '<td>' + r.name + '</td>';
             html_content += '<td>' + r.location + '</td>';
-            html_content += '<td class="leaders-cell">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
+            html_content += '<td class="leaders-cell"><div class="leaders-grid">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
             html_content += '<td>' + (r.remark || '-') + '</td>';
             html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
             html_content += '</tr>';
@@ -566,7 +568,7 @@ function renderMeetingRecords() {
                 html_content += '<td>' + r.time + '</td>';
                 html_content += '<td>' + r.name + '</td>';
                 html_content += '<td>' + r.location + '</td>';
-                html_content += '<td class="leaders-cell">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
+                html_content += '<td class="leaders-cell"><div class="leaders-grid">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
                 html_content += '<td>' + (r.remark || '-') + '</td>';
                 html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
                 html_content += '</tr>';
