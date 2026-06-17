@@ -47,6 +47,7 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 2px 8px;
+        justify-items: center;
     }
     .leader-tag {
         text-align: center;
@@ -56,6 +57,9 @@
         border-radius: 0 !important;
         padding: 0 !important;
         font-size: 13px;
+    }
+    .leader-tag:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
     }
     
         tr:hover { background: #f8f9fa; }
