@@ -100,10 +100,87 @@
             .leader-cards { grid-template-columns: repeat(2, 1fr); }
         }
     #meetingTableBody td, #bookingTableBody td, #leaderCards { text-align: center; }
+        
+        /* ===== 密码登录遮罩 ===== */
+        .pw-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s, visibility 0.5s;
+        }
+        .pw-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .pw-box {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+        .pw-box .icon { font-size: 64px; margin-bottom: 16px; display: block; }
+        .pw-box h2 { color: #fff; font-size: 24px; margin-bottom: 8px; font-weight: 600; }
+        .pw-box p { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 24px; }
+        .pw-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .pw-input-group input {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .pw-input-group input::placeholder { color: rgba(255,255,255,0.5); }
+        .pw-input-group input:focus { border-color: rgba(255,255,255,0.8); }
+        .pw-input-group button {
+            padding: 14px 28px;
+            background: #fff;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pw-input-group button:hover { background: #f0f0f0; }
+        .pw-error { color: #ff6b6b; font-size: 13px; margin-top: 12px; display: none; }
+        .pw-error.show { display: block; }
+
         </style>
 </head>
 
 <body>
+
+<div id="pwOverlay" class="pw-overlay">
+    <div class="pw-box">
+        <span class="icon">🔐</span>
+        <h2>厂领导会议管理系统</h2>
+        <p>请输入密码以继续</p>
+        <div class="pw-input-group">
+            <input type="password" id="pwInput" placeholder="输入密码" autofocus>
+            <button onclick="checkPassword()">进入</button>
+        </div>
+        <div id="pwError" class="pw-error">密码错误，请重试</div>
+    </div>
+</div>
+
 
 <div id="passwordModal">
     <div class="modal-content">
@@ -251,6 +328,39 @@
     </div>
 </div>
 <script>
+
+// ===== 密码进入保护 =====
+var PAGE_PASSWORD = '123456';
+(function() {
+    var saved = localStorage.getItem('meeting_pw_auth');
+    if (saved === '1') {
+        document.getElementById('pwOverlay').classList.add('hidden');
+    }
+})();
+
+function checkPassword() {
+    var pw = document.getElementById('pwInput').value;
+    if (pw === PAGE_PASSWORD) {
+        localStorage.setItem('meeting_pw_auth', '1');
+        document.getElementById('pwOverlay').classList.add('hidden');
+        document.getElementById('pwError').classList.remove('show');
+    } else {
+        document.getElementById('pwError').classList.add('show');
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+    }
+}
+
+// 回车键提交
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('pwInput');
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { checkPassword(); }
+        });
+    }
+});
+
 
 // ==================== 全局变量 ====================
 const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏'];
