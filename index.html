@@ -647,8 +647,9 @@ function renderMeetingRecords() {
     const pastDates = sortedDates.filter(d => d < today);
     const futureDates = sortedDates.filter(d => d >= today);
     let html_content = '';
+    window._pastDatesCount = 0;
+    window._pastDaysCount = pastDates.length;
     
-    // 未来/今日会议
     futureDates.forEach(dateKey => {
         const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
         const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
@@ -667,18 +668,18 @@ function renderMeetingRecords() {
         html_content += '<tr class="date-gap"><td colspan="6" style="height:12px;background:#f9f9f9;"></td></tr>';
     });
     
-    // 过往会议折叠
     if (pastDates.length > 0) {
-        const totalPast = pastDates.reduce((s, d) => s + grouped[d].length, 0);
+        let totalPast = 0;
+        pastDates.forEach(dateKey => { totalPast += grouped[dateKey].length; });
+        window._pastTotalCount = totalPast;
         html_content += '<tr id="pastMeetingsToggle" style="cursor:pointer;" onclick="togglePastMeetings()"><td colspan="6" style="text-align:center;padding:12px;background:#e9ecef;border-radius:8px;color:#495057;font-size:14px;font-weight:500;">📋 查看历史会议（' + pastDates.length + ' 天，共 ' + totalPast + ' 条）▾</td></tr>';
-        html_content += '<tbody id="pastMeetingsBody" style="display:none;">';
         pastDates.forEach(dateKey => {
             const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
             const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
-            html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">会议提醒 (' + displayDate + ')</td></tr>';
-            html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
+            html_content += '<tr class="past-row" style="display:none;"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">会议提醒 (' + displayDate + ')</td></tr>';
+            html_content += '<tr class="past-row" style="display:none;"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
             grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
-                html_content += '<tr>';
+                html_content += '<tr class="past-row" style="display:none;">';
                 html_content += '<td>' + (r.time ? r.time.replace(/^0(\d):/, '$1:') : '') + '</td>';
                 html_content += '<td>' + r.name + '</td>';
                 html_content += '<td>' + r.location + '</td>';
@@ -687,26 +688,27 @@ function renderMeetingRecords() {
                 html_content += '<td style="text-align:center;color:#aaa;">-</td>';
                 html_content += '</tr>';
             });
-            html_content += '<tr class="date-gap"><td colspan="6" style="height:12px;background:#f9f9f9;"></td></tr>';
+            html_content += '<tr class="past-row date-gap" style="display:none;"><td colspan="6" style="height:12px;background:#f9f9f9;"></td></tr>';
         });
-        html_content += '</tbody>';
     }
     
     tbody.innerHTML = html_content;
 }
 
 function togglePastMeetings() {
-    const body = document.getElementById('pastMeetingsBody');
+    const rows = document.querySelectorAll('.past-row');
     const toggle = document.getElementById('pastMeetingsToggle');
-    if (!body || !toggle) return;
+    if (!toggle) return;
     const td = toggle.querySelector('td');
     if (!td) return;
-    if (body.style.display === 'none' || body.style.display === '') {
-        body.style.display = '';
+    const isHidden = rows.length > 0 && rows[0].style.display === 'none';
+    rows.forEach(r => r.style.display = isHidden ? '' : 'none');
+    if (isHidden) {
         td.innerHTML = '📋 收起历史会议 ▴';
     } else {
-        body.style.display = 'none';
-        td.innerHTML = '📋 查看历史会议（' + pastDates.length + ' 天，共 ' + totalPast + ' 条）▾';
+        const days = window._pastDaysCount || '?';
+        const total = window._pastTotalCount || '?';
+        td.innerHTML = '📋 查看历史会议（' + days + ' 天，共 ' + total + ' 条）▾';
     }
 }
 
