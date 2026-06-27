@@ -7,15 +7,17 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); }
-        .header h1 { font-size: 24px; font-weight: 600; }
+        .header { background: #001529; color: white; padding: 16px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
         .header-right { display: flex; align-items: center; gap: 10px; }
-        .unlock-btn { padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: all 0.3s; }
-        .unlock-btn:hover { background: #c82333; }
-        .unlock-btn.unlocked { background: #28a745; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .nav-tab { padding: 12px 24px; background: white; border: 2px solid #667eea; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; color: #667eea; }
-        .nav-tab:hover, .nav-tab.active { background: #667eea; color: white; }
+        .unlock-btn { padding: 8px 20px; background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6); border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; font-family: inherit; }
+        .unlock-btn:hover { background: rgba(220, 53, 69, 0.15); border-color: #dc3545; color: #dc3545; }
+        .unlock-btn.unlocked { background: transparent; border-color: #28a745; color: #28a745; }
+        .unlock-btn.unlocked:hover { background: rgba(40, 167, 69, 0.15); }
+        .nav-tabs { display: flex; gap: 32px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid #e8e8e8; }
+        .nav-tab { padding: 12px 4px; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-weight: 500; transition: all 0.3s; color: #8c8c8c; font-size: 15px; margin-bottom: -1px; }
+        .nav-tab:hover { color: #667eea; }
+        .nav-tab.active { color: #667eea; border-bottom-color: #667eea; }
         .module { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .module-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #667eea; display: flex; align-items: center; gap: 8px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
