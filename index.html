@@ -445,7 +445,6 @@
         <div class="nav-tab active" onclick="switchTab('meeting')" id="tab-meeting">📋 领导会议</div>
         <div class="nav-tab" onclick="switchTab('booking')" id="tab-booking">📅 会议室预定</div>
         <div class="nav-tab" onclick="switchTab('roomstatus')" id="tab-roomstatus">🚪 会议室状态</div>
-        <div class="nav-tab" onclick="switchTab('leader')" id="tab-leader">👥 领导在厂状态</div>
     </div>
 
     <div id="module-meeting" class="module">
@@ -550,26 +549,6 @@
             </div>
         </div>
     </div>
-    <div id="module-leader" class="module" style="display:none;">
-        <div class="module-title"><span>👥</span> 厂领导在厂状态</div>
-        <div class="hint">💡 领导状态会根据会议登记自动同步。也可手动切换状态，手动操作会覆盖自动同步结果。</div>
-        <div class="filter-bar">
-            <label style="font-weight:600;">快速筛选：</label>
-            <button class="btn btn-sm btn-secondary" onclick="filterLeader('all')" id="filter-all">全部</button>
-            <button class="btn btn-sm" style="background:#28a745;color:white;" onclick="filterLeader('in')" id="filter-in">在厂</button>
-            <button class="btn btn-sm" style="background:#dc3545;color:white;" onclick="filterLeader('out')" id="filter-out">外出</button>
-        </div>
-        <div class="leader-cards" id="leaderCards"></div>
-        <div style="margin-top:24px;">
-            <h4 style="margin-bottom:12px;">📜 状态变更记录</h4>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>领导姓名</th><th>状态</th><th>变更时间</th><th>来源</th><th>备注</th></tr></thead>
-                    <tbody id="logTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 </div>
 <script>
 
@@ -610,8 +589,6 @@ document.addEventListener('DOMContentLoaded', function() {
 const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏', '刘钧海', '吕 军', '娄永昌'];
 let meetingRecords = [];
 let bookingRecords = [];
-let leaderStatus = {};
-let statusLog = [];
 let isAuthenticated = false;
 let currentFilter = 'all';
 const STORAGE_KEY = 'meetingSystemData';
@@ -625,27 +602,10 @@ async function cloudLoad() {
     try {
         const results = await Promise.all([
             cloudRequest('list', 'MeetingRecords'),
-            cloudRequest('list', 'BookingRecords'),
-            cloudRequest('list', 'LeaderStatus'),
-            cloudRequest('list', 'StatusLog')
+            cloudRequest('list', 'BookingRecords')
         ]);
         meetingRecords = results[0] || [];
-        bookingRecords = results[1] || [];
-        if (results[2] && results[2].length > 0) {
-            leaderStatus = {};
-            results[2].forEach(item => {
-                leaderStatus[item.name] = {
-                    status: item.status || 'in',
-                    updateTime: item.updateTime || '',
-                    remark: item.remark || '',
-                    source: item.source || 'system'
-                };
-            });
-        }
-        statusLog = results[3] || [];
-        leaders.forEach(l => {
-            if (!leaderStatus[l]) leaderStatus[l] = { status: 'in', updateTime: new Date().toLocaleString('zh-CN'), remark: '', source: 'system' };
-        });
+        bookingRecords = results[1] || []
         saveToLocalStorage();
         setCloudStatus('synced');
         showToast('✅ 云端数据加载成功！');
@@ -662,13 +622,7 @@ async function cloudSave() {
     try {
         await cloudRequest('replaceAll', 'MeetingRecords', meetingRecords);
         await cloudRequest('replaceAll', 'BookingRecords', bookingRecords);
-        const leaderArray = Object.entries(leaderStatus).map(([name, info]) => ({
-            name, status: info.status, updateTime: info.updateTime,
-            remark: info.remark || '', source: info.source || 'system'
-        }));
-        await cloudRequest('replaceAll', 'LeaderStatus', leaderArray);
-        await cloudRequest('replaceAll', 'StatusLog', statusLog.slice(0, 100));
-        setCloudStatus('synced');
+setCloudStatus('synced');
         showToast('✅ 数据已同步到云端！');
         return true;
     } catch(e) {
@@ -705,7 +659,7 @@ function setCloudStatus(s) {
 
 // ==================== 本地存储 ====================
 function saveToLocalStorage() {
-    const data = { meetingRecords, bookingRecords, leaderStatus, statusLog };
+    const data = { meetingRecords, bookingRecords };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) { console.error('保存失败:', e); }
 }
 
@@ -722,13 +676,8 @@ function loadFromStorage() {
             const data = JSON.parse(saved);
             meetingRecords = data.meetingRecords || [];
             bookingRecords = data.bookingRecords || [];
-            leaderStatus = data.leaderStatus || {};
-            statusLog = data.statusLog || [];
         }
     } catch(e) { console.error('加载失败:', e); }
-    leaders.forEach(l => {
-        if (!leaderStatus[l]) leaderStatus[l] = { status: 'in', updateTime: new Date().toLocaleString('zh-CN'), remark: '', source: 'system' };
-    });
 }
 
 // ==================== UI 基础功能 ====================
@@ -771,9 +720,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.appendChild(div);
     });
     loadFromStorage();
-    renderMeetingRecords(); renderBookingRecords(); renderRoomStatus(); renderLeaderStatus(); renderStatusLog();
+    renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
     await cloudLoad();
-    renderMeetingRecords(); renderBookingRecords(); renderRoomStatus(); renderLeaderStatus(); renderStatusLog();
+    renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
     document.getElementById('syncStatus').textContent = '💾 加载中...';
 });
 
@@ -817,17 +766,9 @@ function addMeetingRecord() {
     const inRooms = ['三楼会议室','四楼会议室','五楼会议室','一楼会议室','三楼接待室'];
     const isInFactory = inRooms.indexOf(location) >= 0;
     const now = new Date().toLocaleString('zh-CN');
-    checked.forEach(l => {
-        if (!leaderStatus[l]) leaderStatus[l] = { status: 'in', updateTime: now, remark: '', source: 'system' };
-        leaderStatus[l].status = isInFactory ? 'in' : 'out';
-        leaderStatus[l].updateTime = now;
-        leaderStatus[l].remark = '会议地点：' + location;
-        leaderStatus[l].source = 'auto';
-        addLog(l, isInFactory ? 'in' : 'out', 'auto', '会议：' + name);
-    });
     meetingRecords.unshift({ date, time, name, location, leaders: checked, remark });
     saveToStorage();
-    renderMeetingRecords(); renderLeaderStatus(); renderStatusLog();
+    renderMeetingRecords();
     showToast('✅ 会议记录已添加！');
     document.getElementById('meetingName').value = '';
     document.getElementById('meetingRemark').value = '';
@@ -1255,46 +1196,15 @@ function renderRoomStatusDisplay() {
 }
 
 // ==================== 领导在厂状态 ====================
-function filterLeader(filter) {
-    currentFilter = filter;
-    document.querySelectorAll('.filter-bar .btn').forEach(b => { b.style.background = '#6c757d'; b.style.color = 'white'; });
-    const btn = document.getElementById('filter-' + filter);
-    if (filter === 'in') btn.style.background = '#28a745'; if (filter === 'out') btn.style.background = '#dc3545';
-    renderLeaderStatus();
-}
 
-function toggleLeaderStatus(name) {
-    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
-    const current = (leaderStatus[name] && leaderStatus[name].status) || 'in';
-    const now = new Date().toLocaleString('zh-CN');
-    const newStatus = current === 'in' ? 'out' : 'in';
-    leaderStatus[name] = { status: newStatus, updateTime: now, remark: (leaderStatus[name] && leaderStatus[name].remark) || '', source: 'manual' };
-    addLog(name, newStatus, 'manual', leaderStatus[name].remark || '手动切换');
-    saveToStorage(); renderLeaderStatus(); renderStatusLog();
-    showToast('✅ ' + name + '已标记为"' + (newStatus === 'in' ? '在厂' : '外出') + '"');
-}
 
-function renderLeaderStatus() {
-    const container = document.getElementById('leaderCards');
-    const cards = leaders.map(l => {
-        const s = leaderStatus[l] || { status: 'in' }; const isIn = s.status === 'in';
-        if (currentFilter !== 'all' && ((currentFilter === 'in' && !isIn) || (currentFilter === 'out' && isIn))) return '';
-        return '<div class="leader-card ' + (isIn ? 'in-house' : 'out') + '" onclick="toggleLeaderStatus(&#39;" + l + "&#39;)"><div class="name">' + l + '</div><div class="status">' + (isIn ? '🟢 在厂' : '🔴 外出') + '</div><div class="time">' + (s.updateTime || '-') + '</div></div>';
-    }).join('');
-    container.innerHTML = cards || '<div style="color:#999;padding:20px;">暂无数据</div>';
-}
 
-function addLog(name, status, source, remark) {
-    const time = new Date().toLocaleString('zh-CN');
-    statusLog.unshift({ name, status, time, source, remark });
-    if (statusLog.length > 100) statusLog = statusLog.slice(0, 100);
-}
 
-function renderStatusLog() {
-    const tbody = document.getElementById('logTableBody');
-    if (statusLog.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">暂无记录</td></tr>'; return; }
-    tbody.innerHTML = statusLog.map(l => '<tr><td>' + l.name + '</td><td><span class="badge ' + (l.status === 'in' ? 'badge-in' : 'badge-out') + '">' + (l.status === 'in' ? '在厂' : '外出') + '</span></td><td>' + l.time + '</td><td>' + (l.source === 'manual' ? '🖱️ 手动' : '🤖 自动') + '</td><td>' + (l.remark || '-') + '</td></tr>').join('');
-}
+
+
+
+
+
 
 
 function exportMeetingLog() {
