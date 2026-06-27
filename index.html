@@ -104,6 +104,39 @@
     #meetingTableBody td, #bookingTableBody td, #leaderCards { text-align: center; }
         
         
+        
+        .room-select-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .room-select-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #8c9aaa;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        .room-select-btn:hover {
+            background: rgba(74,144,226,0.1);
+            border-color: rgba(74,144,226,0.3);
+            color: #7eb8f7;
+        }
+        .room-select-btn.active {
+            background: rgba(74,144,226,0.2);
+            border-color: rgba(74,144,226,0.5);
+            color: #4a90e2;
+            box-shadow: 0 0 20px rgba(74,144,226,0.2);
+        }
+
+
         /* ===== 会议室状态显示屏 ===== */
         #module-roomstatus {
             background: transparent;
@@ -499,6 +532,9 @@
     <div id="module-roomstatus" class="module" style="display:none;">
         <div class="module-title"><span>🚪</span> 会议室状态显示屏</div>
         <div class="room-display-wrap">
+            <div class="room-select-bar" id="roomSelectBar">
+                <!-- 按钮由 JS 动态生成 -->
+            </div>
             <div class="room-display-card" id="roomStatusCard">
                 <!-- 内容由 JS 动态渲染 -->
                 <div style="padding:60px 0;color:#666;">正在加载会议室状态...</div>
@@ -1009,9 +1045,34 @@ function renderRoomStatus() {
 
 // ==================== 会议室状态显示屏 ====================
 let roomClockInterval = null;
+let currentSelectedRoom = '二楼中会议室';
+const ROOMS = [
+    '二楼中会议室',
+    '三楼中会议室', 
+    '三楼东会议室',
+    '四楼党员活动室',
+    '生产指挥中心一楼会议室'
+];
+
+function selectRoom(room) {
+    currentSelectedRoom = room;
+    document.querySelectorAll('.room-select-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === room);
+    });
+    renderRoomStatusDisplay();
+}
+
+function renderRoomSelectButtons() {
+    const bar = document.getElementById('roomSelectBar');
+    if (!bar) return;
+    bar.innerHTML = ROOMS.map(room => 
+        `<button class="room-select-btn ${room === currentSelectedRoom ? 'active' : ''}" onclick="selectRoom('${room}')">${room}</button>`
+    ).join('');
+}
 
 function startRoomStatusClock() {
     if (roomClockInterval) clearInterval(roomClockInterval);
+    renderRoomSelectButtons();
     renderRoomStatusDisplay();
     roomClockInterval = setInterval(renderRoomStatusDisplay, 1000);
 }
@@ -1049,22 +1110,15 @@ function renderRoomStatusDisplay() {
     if (!card) return;
     const today = new Date().toISOString().split('T')[0];
     const nowStr = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
-    const nowHM = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}).replace(/^0/,'');
 
-    // 找到当前正在使用的会议室（从预订记录）
-    const todayBooks = bookingRecords.filter(b => b.date === today);
-    let currentMeeting = null;
-    let currentRoom = null;
+    // 使用当前选中的会议室
+    const selectedRoom = currentSelectedRoom;
+    const todayBooks = bookingRecords.filter(b => b.date === today && b.room === selectedRoom);
 
-    for (const book of todayBooks) {
-        if (book.start <= nowStr && book.end > nowStr) {
-            currentMeeting = book;
-            currentRoom = book.room;
-            break;
-        }
-    }
+    // 查找当前会议
+    const currentMeeting = todayBooks.find(b => b.start <= nowStr && b.end > nowStr) || null;
 
-    const nextMeeting = currentRoom ? getNextMeeting(today, currentRoom) : null;
+    const nextMeeting = getNextMeeting(today, selectedRoom);
 
     if (!currentMeeting && !nextMeeting) {
         // 无任何会议
@@ -1166,7 +1220,7 @@ function renderRoomStatusDisplay() {
     card.innerHTML = `
         <div class="room-display-header">
             <div class="room-display-title">会议室状态显示屏</div>
-            <div class="room-name-tag ${currentRoom ? '' : 'none'}">${currentRoom || '空闲中'}</div>
+            <div class="room-name-tag ${currentRoom ? '' : 'none'}">${selectedRoom}</div>
         </div>
         <div class="room-clock-section">
             ${badgeHTML}
