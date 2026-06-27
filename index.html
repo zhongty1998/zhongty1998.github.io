@@ -295,33 +295,54 @@
             color: #ffffff;
             letter-spacing: 2px;
         }
-        .room-next-info {
+        .room-meeting-info {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 24px;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .room-meeting-label {
+            font-size: 14px;
+            color: #6b7b8d;
+            letter-spacing: 2px;
+        }
+        .room-meeting-theme {
+            font-size: 32px;
+            color: #ffffff;
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .room-meeting-booker {
+            font-size: 18px;
+            color: #a0aec0;
+            margin-top: 8px;
+        }
+        .room-next-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
         }
         .room-next-info-item {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
         .room-next-info-item-label {
-            font-size: 13px;
+            font-size: 11px;
             color: #6b7b8d;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
         .room-next-info-item-value {
-            font-size: 20px;
+            font-size: 16px;
             color: #e0e6ed;
             font-weight: 500;
         }
         .room-next-info-item-value.large {
-            font-size: 28px;
+            font-size: 18px;
             color: #ffffff;
-            font-weight: 600;
         }
         .room-no-booking {
             font-size: 16px;
@@ -1130,13 +1151,10 @@ function renderRoomStatusDisplay() {
         const booker = currentMeeting.person || '-';
         const start12 = formatTime12(currentMeeting.start);
         const end12 = formatTime12(currentMeeting.end);
-        statusText = `<div class="room-next-info-item">
-                <div class="room-next-info-item-label">会议主题</div>
-                <div class="room-next-info-item-value large">${theme}</div>
-            </div>
-            <div class="room-next-info-item">
-                <div class="room-next-info-item-label">预约人</div>
-                <div class="room-next-info-item-value">${booker}</div>
+        statusText = `<div class="room-meeting-info">
+                <div class="room-meeting-label">会议主题</div>
+                <div class="room-meeting-theme">${theme}</div>
+                <div class="room-meeting-booker">预约人：${booker}</div>
             </div>`;
 
         // 下一个会议
