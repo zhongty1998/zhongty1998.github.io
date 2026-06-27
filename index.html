@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>厂领导会议管理系统</title>
+    <title>会议管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
@@ -171,7 +171,7 @@
 <div id="pwOverlay" class="pw-overlay">
     <div class="pw-box">
         <span class="icon">🔐</span>
-        <h2>厂领导会议管理系统</h2>
+        <h2>会议管理系统</h2>
         <p>请输入密码以继续</p>
         <div class="pw-input-group">
             <input type="password" id="pwInput" placeholder="输入密码" autofocus>
@@ -203,7 +203,7 @@
 
 <div class="container">
     <div class="header">
-        <h1>🏢 厂领导会议管理系统</h1>
+        <h1>会议管理系统</h1>
         <div class="header-right">
             <span id="syncStatus" style="font-size:13px;opacity:0.8;"></span>
             <button id="unlockBtn" class="unlock-btn" onclick="showPasswordModal()">🔒 解锁编辑</button>
@@ -211,13 +211,13 @@
     </div>
 
     <div class="nav-tabs">
-        <div class="nav-tab active" onclick="switchTab('meeting')" id="tab-meeting">📋 会议登记</div>
+        <div class="nav-tab active" onclick="switchTab('meeting')" id="tab-meeting">📋 领导会议</div>
         <div class="nav-tab" onclick="switchTab('booking')" id="tab-booking">📅 会议室预定</div>
         <div class="nav-tab" onclick="switchTab('leader')" id="tab-leader">👥 领导在厂状态</div>
     </div>
 
     <div id="module-meeting" class="module">
-        <div class="module-title"><span>📋</span> 厂领导会议登记</div>
+        <div class="module-title"><span>📋</span> 领导会议</div>
         <div class="hint">💡 添加会议记录后，参会领导状态将自动同步：选择预设会议室 → 标记为"在厂"；选择自定义地点 → 标记为"外出"。</div>
         <div style="text-align:right;margin-bottom:12px;"><button class="btn btn-success" onclick="exportMeetingLog()">📊 导出会议台账</button></div>
         <div class="form-grid">
@@ -842,63 +842,4 @@ function addLog(name, status, source, remark) {
     if (statusLog.length > 100) statusLog = statusLog.slice(0, 100);
 }
 
-function renderStatusLog() {
-    const tbody = document.getElementById('logTableBody');
-    if (statusLog.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">暂无记录</td></tr>'; return; }
-    tbody.innerHTML = statusLog.map(l => '<tr><td>' + l.name + '</td><td><span class="badge ' + (l.status === 'in' ? 'badge-in' : 'badge-out') + '">' + (l.status === 'in' ? '在厂' : '外出') + '</span></td><td>' + l.time + '</td><td>' + (l.source === 'manual' ? '🖱️ 手动' : '🤖 自动') + '</td><td>' + (l.remark || '-') + '</td></tr>').join('');
-}
-
-
-function exportMeetingLog() {
-    if (meetingRecords.length === 0) {
-        alert('暂无会议记录可导出');
-        return;
-    }
-    
-    // 按日期分组
-    const grouped = {};
-    meetingRecords.forEach(r => {
-        const dateKey = r.date || '';
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(r);
-    });
-    
-    const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
-    
-    // 生成 CSV（UTF-8 BOM for Excel）
-    let csv = '﻿';
-    csv += '会议台账\n\n';
-    
-    sortedDates.forEach(dateKey => {
-        let displayDate = dateKey;
-        const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
-        if (m) {
-            displayDate = parseInt(m[1]) + '月' + parseInt(m[2]) + '日';
-        }
-        csv += displayDate + '\n';
-        csv += '时间,会议名称,地点,参会领导,备注\n';
-        
-        grouped[dateKey].forEach(r => {
-            csv += r.time + ',';
-            csv += '"' + (r.name || '').replace(/"/g, '""') + '",';
-            csv += '"' + (r.location || '').replace(/"/g, '""') + '",';
-            csv += '"' + (r.leaders ? r.leaders.join(' ') : '').replace(/"/g, '""') + '",';
-            csv += '"' + (r.remark || '').replace(/"/g, '""') + '"';
-            csv += '\n';
-        });
-        csv += '\n';
-    });
-    
-    // 下载
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '会议台账_' + new Date().toISOString().slice(0,10) + '.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
-</script>
-</body>
-</html>
+function renderStat
