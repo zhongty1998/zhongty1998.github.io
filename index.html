@@ -784,7 +784,7 @@ function switchTab(tab) {
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     if (tab === 'booking') renderRoomStatus();
-    if (tab === 'roomstatus') startRoomStatusClock();
+    if (tab === 'roomstatus') { loadFromStorage(); startRoomStatusClock(); }
 }
 
 function toggleCustomLocation() { document.getElementById('customLocationGroup').style.display = document.getElementById('meetingLocation').value === 'custom' ? 'block' : 'none'; }
@@ -983,7 +983,7 @@ function getMeetingStatus(booking) {
 function updateBookingStatus(idx, status) {
     if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
     bookingRecords[idx].manualStatus = status;
-    saveToStorage(); renderBookingRecords(); renderRoomStatus();
+    saveToStorage(); renderBookingRecords(); renderRoomStatus(); renderRoomStatusDisplay();
     showToast('✅ 会议状态已更新为：' + status);
 }
 
@@ -1003,7 +1003,7 @@ function addBooking() {
 
 function deleteBooking(idx) {
     if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
-    if (confirm('确定要删除这条预定吗？')) { bookingRecords.splice(idx, 1); saveToStorage(); renderBookingRecords(); renderRoomStatus(); showToast('✅ 已删除'); }
+    if (confirm('确定要删除这条预定吗？')) { bookingRecords.splice(idx, 1); saveToStorage(); renderBookingRecords(); renderRoomStatus(); renderRoomStatusDisplay(); showToast('✅ 已删除'); }
 }
 
 function renderBookingRecords() {
@@ -1117,9 +1117,7 @@ function formatTime12(str) {
     return ampm + ' ' + h12 + ':' + String(m).padStart(2,'0');
 }
 
-function getNextMeeting(today, room) {
-    const now = new Date();
-    const nowStr = now.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit',hour12:false});
+function getNextMeeting(today, room, nowStr) {
     const roomBooks = bookingRecords.filter(b => b.date === today && b.room === room)
         .sort((a,b) => a.start.localeCompare(b.start));
     return roomBooks.find(b => b.start > nowStr) || null;
@@ -1139,7 +1137,7 @@ function renderRoomStatusDisplay() {
     // 查找当前会议
     const currentMeeting = todayBooks.find(b => b.start <= nowStr && b.end > nowStr) || null;
 
-    const nextMeeting = getNextMeeting(today, selectedRoom);
+    const nextMeeting = getNextMeeting(today, selectedRoom, nowStr);
 
     if (!currentMeeting && !nextMeeting) {
         // 无任何会议
@@ -1245,7 +1243,7 @@ function renderRoomStatusDisplay() {
     card.innerHTML = `
         <div class="room-display-header">
             <div class="room-display-title">会议室状态显示屏</div>
-            <div class="room-name-tag ${currentRoom ? '' : 'none'}">${selectedRoom}</div>
+            <div class="room-name-tag">${selectedRoom}</div>
         </div>
         <div class="room-clock-section">
             ${badgeHTML}
