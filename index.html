@@ -267,11 +267,41 @@
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 16px;
-            padding: 28px 32px;
-            display: grid;
-            grid-template-columns: 180px 1fr;
-            gap: 28px;
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
+            gap: 12px;
+        }
+        .room-next-card .next-time {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 2px;
+        }
+        .room-next-card .next-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .room-next-card .next-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            color: #a0aec0;
+        }
+        .room-next-card .next-info-label {
+            font-size: 12px;
+            color: #6b7b8d;
+            letter-spacing: 1px;
+        }
+        .room-next-card .next-info-value {
+            color: #e0e6ed;
+            font-weight: 500;
         }
         .room-next-card.no-next {
             display: flex;
@@ -298,25 +328,23 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 8px;
         }
         .room-meeting-label {
-            font-size: 14px;
+            font-size: 12px;
             color: #6b7b8d;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
         .room-meeting-theme {
-            font-size: 32px;
+            font-size: 22px;
             color: #ffffff;
             font-weight: 700;
             text-align: center;
             line-height: 1.3;
         }
         .room-meeting-booker {
-            font-size: 18px;
+            font-size: 15px;
             color: #a0aec0;
-            margin-top: 8px;
         }
         .room-next-info {
             display: flex;
@@ -1104,17 +1132,13 @@ function renderRoomStatusDisplay() {
     const nowStr = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
     const dateStr = getCurrentDateString();
 
-    // 使用当前选中的会议室
     const selectedRoom = currentSelectedRoom;
     const todayBooks = bookingRecords.filter(b => b.date === today && b.room === selectedRoom);
 
-    // 查找当前会议
     const currentMeeting = todayBooks.find(b => b.start <= nowStr && b.end > nowStr) || null;
-
     const nextMeeting = getNextMeeting(today, selectedRoom, nowStr);
 
     if (!currentMeeting && !nextMeeting) {
-        // 无任何会议
         card.innerHTML = `
             <div class="room-display-header">
                 <div class="room-display-title">会议室状态显示屏</div>
@@ -1135,34 +1159,29 @@ function renderRoomStatusDisplay() {
         return;
     }
 
-    let clockHTML = '';
-    let badgeHTML = '';
-    let statusText = '';
-    let themeHTML = '';
-    let nextHTML = '';
+    let mainSectionHTML = '';
+    let nextSectionHTML = '';
 
     if (currentMeeting) {
-        const duration = getMeetingDuration(currentMeeting.start);
-        const [endH, endM] = currentMeeting.end.split(':').map(Number);
-        const endDate = new Date();
-        endDate.setHours(endH, endM, 0, 0);
-        const remaining = Math.max(0, Math.floor((endDate - new Date()) / 60000));
-        const remMin = remaining % 60;
-        const remH = Math.floor(remaining / 60);
-
-        clockHTML = `<div class="room-clock-label">已召开</div>
-            <div class="room-clock-time">${duration}<span class="room-clock-unit"></span></div>
-            <div class="room-date-display">${dateStr}</div>
-            <div style="margin-top:8px;font-size:14px;color:#6b7b8d;">预计 ${currentMeeting.end} 结束 · 剩余 ${remH > 0 ? remH+'h' : ''}${remMin}m</div>`;
-
-        badgeHTML = `<div class="room-status-badge in-use"><div class="room-status-dot"></div>会议进行中</div>`;
-
-        // 当前会议主题
+        // 当前会议：显示时间区间和会议信息
         const theme = currentMeeting.topic || currentMeeting.person || '会议';
         const booker = currentMeeting.person || '-';
-        const start12 = formatTime12(currentMeeting.start);
-        const end12 = formatTime12(currentMeeting.end);
-        statusText = `<div class="room-meeting-info">
+        
+        mainSectionHTML = `
+            <div class="room-status-badge in-use">
+                <div class="room-status-dot"></div>
+                会议进行中
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;margin:16px 0;">
+                <div style="font-family:'Courier New',monospace;font-size:36px;font-weight:700;color:#fff;letter-spacing:2px;">
+                    ${currentMeeting.start}
+                </div>
+                <div style="color:#6b7b8d;font-size:20px;">—</div>
+                <div style="font-family:'Courier New',monospace;font-size:36px;font-weight:700;color:#fff;letter-spacing:2px;">
+                    ${currentMeeting.end}
+                </div>
+            </div>
+            <div class="room-meeting-info">
                 <div class="room-meeting-label">会议主题</div>
                 <div class="room-meeting-theme">${theme}</div>
                 <div class="room-meeting-booker">预约人：${booker}</div>
@@ -1172,42 +1191,47 @@ function renderRoomStatusDisplay() {
         if (nextMeeting) {
             const nTheme = nextMeeting.topic || nextMeeting.person || '会议';
             const nBooker = nextMeeting.person || '-';
-            nextHTML = `
-                <div class="room-next-label" style="margin-top:24px;">下一个会议</div>
-                <div class="room-clock-time" style="font-size:32px;">${formatTime12(nextMeeting.start)}</div>
-                <div class="room-next-info" style="margin-top:16px;">
-                    <div class="room-next-info-item">
-                        <div class="room-next-info-item-label">会议主题</div>
-                        <div class="room-next-info-item-value large">${nTheme}</div>
-                    </div>
-                    <div class="room-next-info-item">
-                        <div class="room-next-info-item-label">预约人</div>
-                        <div class="room-next-info-item-value">${nBooker}</div>
+            nextSectionHTML = `
+                <div class="room-next-card">
+                    <div class="room-next-label">下一个会议</div>
+                    <div class="next-time">${formatTime12(nextMeeting.start)}</div>
+                    <div class="next-info">
+                        <div class="next-info-item">
+                            <span class="next-info-label">主题</span>
+                            <span class="next-info-value">${nTheme}</span>
+                        </div>
+                        <div class="next-info-item">
+                            <span class="next-info-label">预约人</span>
+                            <span class="next-info-value">${nBooker}</span>
+                        </div>
                     </div>
                 </div>`;
         } else {
-            nextHTML = `
-                <div class="room-next-label" style="margin-top:24px;">今日后续</div>
-                <div class="room-no-booking">无更多会议安排</div>`;
+            nextSectionHTML = `
+                <div class="room-next-card no-next">
+                    <div class="room-next-label">今日后续</div>
+                    <div class="room-no-booking">无更多会议安排</div>
+                </div>`;
         }
     } else if (nextMeeting) {
-        // 当前空闲，但有下一个会议
+        // 当前空闲：显示下一个会议信息
         const nTheme = nextMeeting.topic || nextMeeting.person || '会议';
         const nBooker = nextMeeting.person || '-';
-        clockHTML = `<div class="room-clock-label">下一个会议开始于</div>
-            <div class="room-clock-time">${formatTime12(nextMeeting.start)}</div>
-            <div class="room-date-display">${dateStr}</div>`;
-        badgeHTML = `<div class="room-status-badge free"><div class="room-status-dot"></div>当前空闲</div>`;
-        nextHTML = `
-            <div class="room-next-info" style="margin-top:16px;">
-                <div class="room-next-info-item">
-                    <div class="room-next-info-item-label">会议主题</div>
-                    <div class="room-next-info-item-value large">${nTheme}</div>
+        
+        mainSectionHTML = `
+            <div class="room-status-badge free">
+                <div class="room-status-dot"></div>
+                当前空闲
+            </div>
+            <div style="margin:16px 0;">
+                <div style="font-family:'Courier New',monospace;font-size:48px;font-weight:700;color:#fff;letter-spacing:3px;">
+                    ${formatTime12(nextMeeting.start)}
                 </div>
-                <div class="room-next-info-item">
-                    <div class="room-next-info-item-label">预约人</div>
-                    <div class="room-next-info-item-value">${nBooker}</div>
-                </div>
+            </div>
+            <div class="room-meeting-info" style="margin-top:8px;">
+                <div class="room-meeting-label">下一个会议</div>
+                <div class="room-meeting-theme">${nTheme}</div>
+                <div class="room-meeting-booker">预约人：${nBooker}</div>
             </div>`;
     }
 
@@ -1217,12 +1241,9 @@ function renderRoomStatusDisplay() {
             <div class="room-name-tag">${selectedRoom}</div>
         </div>
         <div class="room-clock-section">
-            ${badgeHTML}
-            ${clockHTML}
+            ${mainSectionHTML}
         </div>
-        <div class="room-next-card ${nextHTML ? '' : 'no-next'}">
-            ${nextHTML || '<div class="room-next-label">今日安排</div><div class="room-no-booking">无更多会议</div>'}
-        </div>`;
+        ${nextSectionHTML}`;
 }
 
 // ==================== 领导在厂状态 ====================
