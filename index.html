@@ -5,9 +5,9 @@
     <title>会议管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f3f7; color: #333; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: #001529; color: white; padding: 16px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .header { background: #2c3e50; color: white; padding: 16px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
         .header h1 { font-size: 20px; font-weight: 600; letter-spacing: 0.5px; }
         .header-right { display: flex; align-items: center; gap: 10px; }
         .unlock-btn { padding: 8px 20px; background: transparent; color: white; border: 1px solid rgba(255,255,255,0.6); border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; font-family: inherit; }
@@ -16,22 +16,22 @@
         .unlock-btn.unlocked:hover { background: rgba(40, 167, 69, 0.15); }
         .nav-tabs { display: flex; gap: 32px; margin-bottom: 20px; flex-wrap: wrap; border-bottom: 1px solid #e8e8e8; }
         .nav-tab { padding: 12px 4px; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-weight: 500; transition: all 0.3s; color: #8c8c8c; font-size: 15px; margin-bottom: -1px; }
-        .nav-tab:hover { color: #667eea; }
-        .nav-tab.active { color: #667eea; border-bottom-color: #667eea; }
+        .nav-tab:hover { color: #4a90e2; }
+        .nav-tab.active { color: #4a90e2; border-bottom-color: #4a90e2; }
         .module { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .module-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #667eea; display: flex; align-items: center; gap: 8px; }
+        .module-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #4a90e2; display: flex; align-items: center; gap: 8px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px; }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-weight: 600; margin-bottom: 6px; color: #555; font-size: 14px; }
         .form-group input, .form-group select, .form-group textarea { padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; font-family: inherit; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #4a90e2; box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1); }
         .btn { padding: 10px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 600; transition: all 0.3s; font-family: inherit; }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #5568d3; }
+        .btn-primary { background: #4a90e2; color: white; }
+        .btn-primary:hover { background: #357abd; }
         .btn-danger { background: #dc3545; color: white; padding: 6px 14px; font-size: 13px; }
         .btn-danger:hover { background: #c82333; }
         .btn-secondary { background: #6c757d; color: white; }
-        .btn-secondary:hover { background: #5a6268; }
+        .btn-secondary:hover { background: #4a5568; }
         .btn-sm { padding: 4px 10px; font-size: 12px; }
         .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 12px 0; }
         .checkbox-item { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px; cursor: pointer; transition: all 0.2s; border: 1px solid #eee; }
@@ -39,7 +39,7 @@
         .checkbox-item input { width: 16px; height: 16px; cursor: pointer; }
         .table-wrap { overflow-x: auto; margin-top: 16px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th { background: #667eea; color: #1a1a2e; padding: 12px 6px; text-align: center; white-space: nowrap; font-size: 13px; }
+        th { background: #edf2f7; color: #2c3e50; padding: 12px 6px; text-align: center; white-space: nowrap; font-size: 13px; }
         td { padding: 10px 6px; border-bottom: 1px solid #eee; vertical-align: middle; font-size: 13px; }
     td.leaders-cell {
         padding: 6px 4px !important;
@@ -72,20 +72,20 @@
         #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; }
         #loadingOverlay .spinner { background: white; padding: 24px 48px; border-radius: 12px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
         .spinner-icon { font-size: 32px; animation: spin 1s linear infinite; display: inline-block; }
-        .spinner-text { margin-top: 12px; font-weight: 600; color: #667eea; }
+        .spinner-text { margin-top: 12px; font-weight: 600; color: #4a90e2; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         #toast { position: fixed; top: 30px; right: 30px; background: #28a745; color: white; padding: 14px 24px; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(-100px); opacity: 0; transition: all 0.3s; z-index: 9999; }
         #toast.show { transform: translateY(0); opacity: 1; }
-        .hint { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; color: #155724; margin-bottom: 16px; }
+        .hint { background: #edf2f7; border-left: 4px solid #2196F3; padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 13px; color: #155724; margin-bottom: 16px; }
         #passwordModal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 10000; }
         #passwordModal .modal-content { background: white; padding: 32px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
         #passwordModal h3 { margin-bottom: 8px; color: #333; }
         #passwordModal p { margin-bottom: 20px; color: #666; font-size: 14px; }
         #passwordModal input { padding: 12px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; width: 100%; text-align: center; margin-bottom: 12px; }
-        #passwordModal input:focus { outline: none; border-color: #667eea; }
+        #passwordModal input:focus { outline: none; border-color: #4a90e2; }
         #passwordModal .error { color: #dc3545; font-size: 13px; display: none; margin-bottom: 12px; }
-        #passwordModal button { padding: 12px 32px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        #passwordModal button:hover { background: #5568d3; }
+        #passwordModal button { padding: 12px 32px; background: #4a90e2; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        #passwordModal button:hover { background: #357abd; }
         .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
         .filter-bar input, .filter-bar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         .leader-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
@@ -107,7 +107,7 @@
         .pw-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4a90e2 0%, #4a90e2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -153,7 +153,7 @@
         .pw-input-group button {
             padding: 14px 28px;
             background: #fff;
-            color: #667eea;
+            color: #4a90e2;
             border: none;
             border-radius: 10px;
             font-size: 16px;
@@ -655,8 +655,8 @@ function renderMeetingRecords() {
     futureDates.forEach(dateKey => {
         const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
         const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
-        html_content += '<tr class="date-separator"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #007bff;">会议提醒 (' + displayDate + ')</td></tr>';
-        html_content += '<tr class="date-header"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
+        html_content += '<tr class="date-separator"><td colspan="6" style="background:#edf2f7;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #4a90e2;">会议提醒 (' + displayDate + ')</td></tr>';
+        html_content += '<tr class="date-header"><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">时间</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">会议名称</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">参会地点</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">参会领导</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">其他要求</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">操作</th></tr>';
         grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
             html_content += '<tr>';
             html_content += '<td>' + (r.time ? r.time.replace(/^0(\d):/, '$1:') : '') + '</td>';
@@ -664,7 +664,7 @@ function renderMeetingRecords() {
             html_content += '<td>' + r.location + '</td>';
             html_content += '<td class="leaders-cell"><div class="leaders-grid">' + (r.leaders ? r.leaders.map(function(l){return '<span class="leader-tag">'+l+'</span>'}).join('') : '-') + '</td>';
             html_content += '<td>' + (r.remark || '-') + '</td>';
-            html_content += '<td><button class="btn btn-sm" style="background:#007bff;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
+            html_content += '<td><button class="btn btn-sm" style="background:#4a90e2;color:white;margin-right:5px;" onclick="editMeetingRecord(' + r.originalIndex + ')">编辑</button><button class="btn btn-danger btn-sm" onclick="deleteMeetingRecord(' + r.originalIndex + ')">删除</button></td>';
             html_content += '</tr>';
         });
         html_content += '<tr class="date-gap"><td colspan="6" style="height:12px;background:#f9f9f9;"></td></tr>';
@@ -678,8 +678,8 @@ function renderMeetingRecords() {
         pastDates.forEach(dateKey => {
             const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
             const displayDate = m ? parseInt(m[1]) + '月' + parseInt(m[2]) + '日' : dateKey;
-            html_content += '<tr class="past-row" style="display:none;"><td colspan="6" style="background:#f0f7ff;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">会议提醒 (' + displayDate + ')</td></tr>';
-            html_content += '<tr class="past-row" style="display:none;"><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">时间</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">会议名称</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会地点</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">参会领导</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">其他要求</th><th style="background:#e8f4ff;padding:8px;text-align:center;font-size:13px;">操作</th></tr>';
+            html_content += '<tr class="past-row" style="display:none;"><td colspan="6" style="background:#edf2f7;font-weight:bold;text-align:center;padding:15px;font-size:16px;border-top:3px solid #999;color:#666;">会议提醒 (' + displayDate + ')</td></tr>';
+            html_content += '<tr class="past-row" style="display:none;"><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">时间</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">会议名称</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">参会地点</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">参会领导</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">其他要求</th><th style="background:#f8f9fa;padding:8px;text-align:center;font-size:13px;color:#2c3e50;">操作</th></tr>';
             grouped[dateKey].sort((a, b) => a.time.localeCompare(b.time)).forEach(r => {
                 html_content += '<tr class="past-row" style="display:none;">';
                 html_content += '<td>' + (r.time ? r.time.replace(/^0(\d):/, '$1:') : '') + '</td>';
@@ -771,7 +771,7 @@ function renderBookingRecords() {
     tbody.innerHTML = rows.map(r => { 
         const i = bookingRecords.indexOf(r); 
         const status = getMeetingStatus(r);
-        const statusColor = status === '进行中' ? '#28a745' : (status === '已结束' ? '#6c757d' : '#007bff');
+        const statusColor = status === '进行中' ? '#28a745' : (status === '已结束' ? '#6c757d' : '#4a90e2');
         return '<tr><td>' + r.date + '</td><td>' + r.start + ' - ' + r.end + '</td><td>' + r.room + '</td><td>' + r.person + '</td><td>' + (r.topic || '-') + '</td><td><select onchange="updateBookingStatus(' + i + ', this.value)" style="padding:4px;border-radius:4px;border:1px solid ' + statusColor + ';color:' + statusColor + ';font-size:12px;"><option value="待召开"' + (status === '待召开' ? ' selected' : '') + '>待召开</option><option value="进行中"' + (status === '进行中' ? ' selected' : '') + '>进行中</option><option value="已结束"' + (status === '已结束' ? ' selected' : '') + '>已结束</option></select></td><td><button class="btn btn-danger btn-sm" onclick="deleteBooking(' + i + ')">删除</button></td></tr>'; 
     }).join('');
 }
