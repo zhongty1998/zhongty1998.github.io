@@ -222,6 +222,15 @@
             color: rgba(255,255,255,0.5);
             margin-left: 4px;
         }
+
+        .room-date-display {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+            letter-spacing: 2px;
+            margin-top: 12px;
+            font-weight: 400;
+        }
+
         .room-status-badge {
             display: inline-flex;
             align-items: center;
@@ -1077,6 +1086,17 @@ function startRoomStatusClock() {
     roomClockInterval = setInterval(renderRoomStatusDisplay, 1000);
 }
 
+
+function getCurrentDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    const weekday = weekdays[now.getDay()];
+    return `${year}年${month}月${day}日 ${weekday}`;
+}
+
 function getMeetingDuration(startStr) {
     // 返回 HH:MM:SS 格式的已召开时长
     const now = new Date();
@@ -1110,6 +1130,7 @@ function renderRoomStatusDisplay() {
     if (!card) return;
     const today = new Date().toISOString().split('T')[0];
     const nowStr = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',hour12:false});
+    const dateStr = getCurrentDateString();
 
     // 使用当前选中的会议室
     const selectedRoom = currentSelectedRoom;
@@ -1125,14 +1146,16 @@ function renderRoomStatusDisplay() {
         card.innerHTML = `
             <div class="room-display-header">
                 <div class="room-display-title">会议室状态显示屏</div>
+                <div class="room-name-tag">${selectedRoom}</div>
             </div>
             <div class="room-clock-section">
                 <div class="room-status-badge free">
                     <div class="room-status-dot"></div>
                     当前空闲
                 </div>
+                <div class="room-clock-time">--:--</div>
+                <div class="room-date-display">${dateStr}</div>
             </div>
-            <div class="room-clock-time">--:--</div>
             <div class="room-next-card no-next">
                 <div class="room-next-label">今日无更多会议安排</div>
                 <div class="room-no-booking">全天均可使用</div>
@@ -1157,6 +1180,7 @@ function renderRoomStatusDisplay() {
 
         clockHTML = `<div class="room-clock-label">已召开</div>
             <div class="room-clock-time">${duration}<span class="room-clock-unit"></span></div>
+            <div class="room-date-display">${dateStr}</div>
             <div style="margin-top:8px;font-size:14px;color:#6b7b8d;">预计 ${currentMeeting.end} 结束 · 剩余 ${remH > 0 ? remH+'h' : ''}${remMin}m</div>`;
 
         badgeHTML = `<div class="room-status-badge in-use"><div class="room-status-dot"></div>会议进行中</div>`;
@@ -1202,7 +1226,8 @@ function renderRoomStatusDisplay() {
         const nTheme = nextMeeting.topic || nextMeeting.person || '会议';
         const nBooker = nextMeeting.person || '-';
         clockHTML = `<div class="room-clock-label">下一个会议开始于</div>
-            <div class="room-clock-time">${formatTime12(nextMeeting.start)}</div>`;
+            <div class="room-clock-time">${formatTime12(nextMeeting.start)}</div>
+            <div class="room-date-display">${dateStr}</div>`;
         badgeHTML = `<div class="room-status-badge free"><div class="room-status-dot"></div>当前空闲</div>`;
         nextHTML = `
             <div class="room-next-info" style="margin-top:16px;">
