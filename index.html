@@ -842,4 +842,63 @@ function addLog(name, status, source, remark) {
     if (statusLog.length > 100) statusLog = statusLog.slice(0, 100);
 }
 
-function renderStat
+function renderStatusLog() {
+    const tbody = document.getElementById('logTableBody');
+    if (statusLog.length === 0) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">暂无记录</td></tr>'; return; }
+    tbody.innerHTML = statusLog.map(l => '<tr><td>' + l.name + '</td><td><span class="badge ' + (l.status === 'in' ? 'badge-in' : 'badge-out') + '">' + (l.status === 'in' ? '在厂' : '外出') + '</span></td><td>' + l.time + '</td><td>' + (l.source === 'manual' ? '🖱️ 手动' : '🤖 自动') + '</td><td>' + (l.remark || '-') + '</td></tr>').join('');
+}
+
+
+function exportMeetingLog() {
+    if (meetingRecords.length === 0) {
+        alert('暂无会议记录可导出');
+        return;
+    }
+    
+    // 按日期分组
+    const grouped = {};
+    meetingRecords.forEach(r => {
+        const dateKey = r.date || '';
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        grouped[dateKey].push(r);
+    });
+    
+    const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+    
+    // 生成 CSV（UTF-8 BOM for Excel）
+    let csv = '﻿';
+    csv += '会议台账\n\n';
+    
+    sortedDates.forEach(dateKey => {
+        let displayDate = dateKey;
+        const m = dateKey.match(/\d{4}-(\d{2})-(\d{2})/);
+        if (m) {
+            displayDate = parseInt(m[1]) + '月' + parseInt(m[2]) + '日';
+        }
+        csv += displayDate + '\n';
+        csv += '时间,会议名称,地点,参会领导,备注\n';
+        
+        grouped[dateKey].forEach(r => {
+            csv += r.time + ',';
+            csv += '"' + (r.name || '').replace(/"/g, '""') + '",';
+            csv += '"' + (r.location || '').replace(/"/g, '""') + '",';
+            csv += '"' + (r.leaders ? r.leaders.join(' ') : '').replace(/"/g, '""') + '",';
+            csv += '"' + (r.remark || '').replace(/"/g, '""') + '"';
+            csv += '\n';
+        });
+        csv += '\n';
+    });
+    
+    // 下载
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = '会议台账_' + new Date().toISOString().slice(0,10) + '.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>
