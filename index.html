@@ -698,7 +698,7 @@
 <script>
 
 // ===== 密码进入保护 =====
-var PAGE_PASSWORD = '1998';
+var PAGE_PASSWORD = '0000';
 (function() {
     var saved = localStorage.getItem('meeting_pw_auth');
     if (saved === '1') {
@@ -835,7 +835,7 @@ function showPasswordModal() {
 
 function checkPassword() {
     const pwd = document.getElementById('passwordInput').value;
-    if (pwd === '1998') {
+    if (pwd === '0000') {
         isAuthenticated = true;
         document.getElementById('passwordModal').style.display = 'none';
         const btn = document.getElementById('unlockBtn');
