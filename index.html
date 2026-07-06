@@ -142,8 +142,8 @@
 
 
         /* ===== 值班情况 ===== */
-        .duty-stack { display: flex; flex-direction: column; gap: 12px; }
-        .duty-card { background: #fff; border: 1px solid #ebeef5; border-radius: 10px; padding: 16px 18px; transition: all 0.2s; }
+        .duty-stack { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
+        .duty-card { background: #fff; border: 1px solid #ebeef5; border-radius: 10px; padding: 16px 18px; transition: all 0.2s; width: 100%; box-sizing: border-box; }
         .duty-card.is-today { background: #eaf3ff; border-color: #b3d4f0; border-left: 4px solid #4a90e2; padding-left: 14px; }
         .duty-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .duty-card-date { font-size: 15px; font-weight: 700; color: #2c3e50; }
@@ -1622,8 +1622,6 @@ function exportMeetingLog() {
 })();
 </script>
 
-</body>
-</html
     <div id="module-reminder" class="module" style="display:none;">
         <div class="module-title"><span>🔔</span> 值班情况</div>
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
@@ -1650,3 +1648,5 @@ function exportMeetingLog() {
     </div>
 
 >
+</body>
+</html
