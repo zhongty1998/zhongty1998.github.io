@@ -142,8 +142,8 @@
 
 
         /* ===== 值班情况 ===== */
-        .duty-stack { display: flex; flex-direction: column; gap: 12px; align-items: stretch; }
-        .duty-card { background: #fff; border: 1px solid #ebeef5; border-radius: 10px; padding: 16px 18px; transition: all 0.2s; width: 100%; box-sizing: border-box; }
+        .duty-stack { display: flex; flex-direction: column; gap: 12px; align-items: center; max-width: 720px; margin: 0 auto; }
+        .duty-card { background: #fff; border: 1px solid #ebeef5; border-radius: 10px; padding: 14px 20px; transition: all 0.2s; width: 100%; box-sizing: border-box; }
         .duty-card.is-today { background: #eaf3ff; border-color: #b3d4f0; border-left: 4px solid #4a90e2; padding-left: 14px; }
         .duty-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .duty-card-date { font-size: 15px; font-weight: 700; color: #2c3e50; }
@@ -1208,7 +1208,7 @@ async function initDutyModule() {
             renderDutyCards();
             updateDutyCopyPreview();
         } else {
-            document.getElementById('dutyCardArea').innerHTML = '<div style="text-align:center;padding:40px;color:#bfbfbf;font-size:14px;">暂无数据，请先导入值班表</div>';
+            document.getElementById('dutyCardArea').innerHTML = '<div style="text-align:center;padding:40px;color:#bfbfbf;font-size:14px;max-width:720px;margin:0 auto;">暂无数据，请先导入值班表</div>';
             document.getElementById('dutyCopyPreview').innerText = '请先导入值班表查看';
         }
     } catch(e) {
@@ -1624,12 +1624,12 @@ function exportMeetingLog() {
 
     <div id="module-reminder" class="module" style="display:none;">
         <div class="module-title"><span>🔔</span> 值班情况</div>
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;max-width:720px;margin-left:auto;margin-right:auto;">
             <label for="dutyFileInput" class="btn btn-primary" style="cursor:pointer;">📂 导入值班表</label>
             <input type="file" id="dutyFileInput" accept=".xlsx,.xls" style="display:none">
             <span style="font-size:12px;color:#999;">（第1列日期 第3列领导 第4列首席和总监 第5列人员）</span>
         </div>
-        <div class="form-group" style="margin-bottom:16px;">
+        <div class="form-group" style="margin-bottom:16px;max-width:720px;margin-left:auto;margin-right:auto;">
             <label style="font-weight:500;margin-bottom:6px;display:block;">🔍 自定义查看日期</label>
             <div style="display:flex;gap:10px;align-items:center;">
                 <input type="date" id="dutyCustomDate" style="max-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;">
@@ -1638,9 +1638,9 @@ function exportMeetingLog() {
             </div>
         </div>
         <div id="dutyCardArea">
-            <div style="text-align:center;padding:40px;color:#bfbfbf;font-size:14px;">暂无数据，请先导入值班表</div>
+            <div style="text-align:center;padding:40px;color:#bfbfbf;font-size:14px;max-width:720px;margin:0 auto;">暂无数据，请先导入值班表</div>
         </div>
-        <div style="margin-top:16px;padding:14px 16px;background:#f0f7ff;border-radius:10px;border:1px solid #d0e8ff;">
+        <div style="margin-top:16px;padding:14px 16px;background:#f0f7ff;border-radius:10px;border:1px solid #d0e8ff;max-width:720px;margin-left:auto;margin-right:auto;">
             <div style="font-weight:600;font-size:14px;color:#4a90e2;margin-bottom:8px;">📋 工作提醒生成</div>
             <div style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6;" id="dutyCopyPreview">请先导入值班表查看</div>
             <button class="btn btn-success" style="width:100%;" id="dutyCopyBtn" onclick="copyDutyReminder()">📋 复制工作提醒</button>
