@@ -141,35 +141,15 @@
 
 
 
-        /* ===== 值班看板 ===== */
-        .reminder-content { padding: 0; }
-        .duty-widget { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
-        .duty-header { padding: 16px 20px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
-        .duty-header-title { font-size: 17px; font-weight: 700; color: #333; }
-        .duty-controls { display: flex; gap: 10px; align-items: center; }
-        .duty-upload-btn { font-size: 12px; color: #1677ff; cursor: pointer; background: #e6f4ff; padding: 5px 10px; border-radius: 6px; transition: all 0.2s; }
-        .duty-upload-btn:hover { background: #bae0ff; }
-        .duty-date-picker { border: 1px solid #ddd; padding: 5px 8px; border-radius: 6px; font-size: 13px; color: #333; outline: none; }
-        .duty-list { padding: 10px; background: #fafafa; }
-        .duty-card { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #f0f0f0; position: relative; }
-        .duty-card.is-today { background: #e6f4ff; border-color: #91caff; box-shadow: 0 2px 8px rgba(22,119,255,0.1); }
-        .duty-card.is-today::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; background: #1677ff; border-radius: 0 4px 4px 0; }
-        .duty-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .duty-date-text { font-weight: 700; font-size: 15px; color: #333; }
-        .duty-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f5f5f5; color: #999; font-weight: 500; }
-        .duty-tag.is-today-tag { background: #1677ff; color: #fff; }
-        .duty-info-row { display: flex; font-size: 13px; margin-bottom: 6px; line-height: 1.6; }
-        .duty-info-row:last-child { margin-bottom: 0; }
-        .duty-info-label { width: 70px; flex-shrink: 0; color: #888; }
-        .duty-info-value { color: #333; font-weight: 500; }
-        .duty-footer { padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; }
-        .duty-copy-btn { width: 100%; padding: 12px; background: #1677ff; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .duty-copy-btn:hover { background: #0958d9; }
-        .duty-status { text-align: center; font-size: 11px; color: #ccc; padding: 8px; background: #fff; }
-        .duty-footer { padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; }
-        .duty-copy-btn { width: 100%; padding: 12px; background: #1677ff; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .duty-copy-btn:hover { background: #0958d9; }
-        .duty-status { text-align: center; font-size: 11px; color: #ccc; padding: 8px; background: #fff; }
+        /* ===== 值班情况 ===== */
+        .duty-card { background: #f9fbff; border: 1px solid #e8eef8; border-radius: 10px; padding: 14px 16px; }
+        .duty-card.is-today { background: #e8f2ff; border-color: #a8c8f0; }
+        .duty-card-label { font-size: 12px; color: #999; font-weight: 500; margin-bottom: 4px; }
+        .duty-card.is-today .duty-card-label { color: #4a90e2; }
+        .duty-card-name { font-size: 16px; font-weight: 700; color: #2c3e50; }
+        .duty-card-empty { font-size: 13px; color: #ccc; }
+        .duty-copy-preview { background: #fff; border: 1px solid #e0eaf8; border-radius: 8px; padding: 12px; font-size: 13px; color: #555; line-height: 1.7; }
+
         /* ===== 会议室状态显示屏 ===== */
         #module-roomstatus {
             background: transparent;
@@ -912,7 +892,7 @@ function switchTab(tab) {
     document.getElementById('tab-' + tab).classList.add('active');
     if (tab === 'booking') renderRoomStatus();
     if (tab === 'roomstatus') { loadFromStorage(); startRoomStatusClock(); }
-    if (tab === 'reminder') { initDutyWidget(); }
+    if (tab === 'reminder') { initDutyModule(); }
 }
 
 function toggleCustomLocation() { document.getElementById('customLocationGroup').style.display = document.getElementById('meetingLocation').value === 'custom' ? 'block' : 'none'; }
@@ -1173,175 +1153,177 @@ function renderRoomStatus() {
 
 
 // ==================== 值班看板 ====================
-let dutyData = [];
-const DUTY_DB_NAME = 'DutyScheduleDB';
-const DUTY_STORE_NAME = 'schedules';
+// ==================== 值班情况 ====================
+let _dutyData = [];
 
-function openDutyDB() {
+function _openDutyDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DUTY_DB_NAME, 1);
-        request.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(DUTY_STORE_NAME)) {
-                db.createObjectStore(DUTY_STORE_NAME, { keyPath: 'id' });
-            }
+        const req = indexedDB.open('DutyScheduleDB2', 1);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('schedules')) db.createObjectStore('schedules', { keyPath: 'id' });
         };
-        request.onsuccess = (event) => resolve(event.target.result);
-        request.onerror = (event) => reject(event.target.error);
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
     });
 }
 
-async function saveDutyToDB(data) {
-    const db = await openDutyDB();
+async function _saveDuty(data) {
+    const db = await _openDutyDB();
     return new Promise((resolve, reject) => {
-        const transaction = db.transaction([DUTY_STORE_NAME], 'readwrite');
-        const store = transaction.objectStore(DUTY_STORE_NAME);
-        store.put({ id: 'current', data: data });
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = (e) => reject(e.target.error);
+        const tx = db.transaction(['schedules'], 'readwrite');
+        tx.objectStore('schedules').put({ id: 'v1', data: data });
+        tx.oncomplete = () => resolve();
+        tx.onerror = (e) => reject(e.target.error);
     });
 }
 
-async function loadDutyFromDB() {
-    const db = await openDutyDB();
+async function _loadDuty() {
+    const db = await _openDutyDB();
     return new Promise((resolve, reject) => {
-        const transaction = db.transaction([DUTY_STORE_NAME], 'readonly');
-        const store = transaction.objectStore(DUTY_STORE_NAME);
-        const request = store.get('current');
-        request.onsuccess = () => resolve(request.result ? request.result.data : null);
-        request.onerror = (e) => reject(e.target.error);
+        const tx = db.transaction(['schedules'], 'readonly');
+        const req = tx.objectStore('schedules').get('v1');
+        req.onsuccess = () => resolve(req.result ? req.result.data : null);
+        req.onerror = (e) => reject(e.target.error);
     });
 }
 
-async function initDutyWidget() {
-    const today = new Date();
-    const dateSel = document.getElementById('dutyDateSelector');
-    if (dateSel) {
-        dateSel.valueAsDate = today;
-        dateSel.addEventListener('change', renderDutyCards);
-    }
+async function initDutyModule() {
     const fileInput = document.getElementById('dutyFileInput');
     if (fileInput) {
-        fileInput.removeEventListener('change', handleDutyFileUpload);
-        fileInput.addEventListener('change', handleDutyFileUpload);
+        fileInput.removeEventListener('change', _handleDutyUpload);
+        fileInput.addEventListener('change', _handleDutyUpload);
     }
     try {
-        const savedData = await loadDutyFromDB();
-        if (savedData && savedData.length > 0) {
-            dutyData = savedData;
+        const saved = await _loadDuty();
+        if (saved && saved.length > 0) {
+            _dutyData = saved;
             renderDutyCards();
-            updateDutyStatus('\u2705 已加载缓存 (' + dutyData.length + '条记录)');
+            updateDutyCopyPreview();
         } else {
-            renderDutyEmpty();
-            updateDutyStatus('\u26a0 未检测到数据，请首次导入排班表');
+            document.getElementById('dutyCardArea').innerHTML = '<div style="text-align:center;padding:40px;color:#bfbfbf;font-size:14px;">暂无数据，请先导入值班表</div>';
+            document.getElementById('dutyCopyPreview').innerText = '请先导入值班表查看';
         }
     } catch(e) {
-        renderDutyEmpty();
-        updateDutyStatus('\u26a0 数据库读取失败');
+        document.getElementById('dutyCardArea').innerHTML = '<div style="text-align:center;padding:40px;color:#ff9999;font-size:13px;">加载缓存失败</div>';
     }
 }
 
-function handleDutyFileUpload(e) {
+function _handleDutyUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
-    updateDutyStatus('\ud83c\udd98 正在解析表格...');
     const reader = new FileReader();
     reader.onload = async function(ev) {
         try {
-            const data = new Uint8Array(ev.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            await processDutyData(jsonData);
-            updateDutyStatus('\u2705 导入成功并已自动保存！');
+            const workbook = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
+            _dutyData = [];
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row[0]) continue;
+                let d;
+                if (typeof row[0] === 'number') {
+                    d = new Date(Math.round((row[0] - 25569) * 86400 * 1000));
+                } else {
+                    d = new Date(row[0].toString().replace(/-/g, '/'));
+                }
+                if (!isNaN(d)) _dutyData.push({ date: d, leader: (row[2] || '').trim() });
+            }
+            await _saveDuty(_dutyData);
+            renderDutyCards();
+            updateDutyCopyPreview();
+            showToast('\u2705 导入成功 (' + _dutyData.length + '条记录)');
         } catch(err) {
-            alert('表格解析失败，请检查格式是否正确');
-            updateDutyStatus('\u274c 解析失败');
+            showToast('\u274c 解析失败，请检查表格格式');
         }
     };
     reader.readAsArrayBuffer(file);
 }
 
-async function processDutyData(rows) {
-    dutyData = [];
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        if (!row[0]) continue;
-        let dateObj;
-        if (typeof row[0] === 'number') {
-            dateObj = new Date(Math.round((row[0] - 25569) * 86400 * 1000));
-        } else {
-            dateObj = new Date(row[0].toString().replace(/-/g, '/'));
-        }
-        if (!isNaN(dateObj)) {
-            dutyData.push({ date: dateObj, leader: row[2] || '-', expert: row[3] || '-', staff: row[4] || '-' });
-        }
-    }
-    await saveDutyToDB(dutyData);
-    renderDutyCards();
+function _findDuty(baseDate, offset) {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + offset);
+    d.setHours(0, 0, 0, 0);
+    return _dutyData.find(r => r.date.getFullYear() === d.getFullYear() && r.date.getMonth() === d.getMonth() && r.date.getDate() === d.getDate());
 }
+
+function _fmtDate(d) {
+    return (d.getMonth() + 1) + '\u6708' + d.getDate() + '\u65e5 \u300a' + ['\u5468\u65e5','\u5468\u4e00','\u5468\u4e8c','\u5468\u4e09','\u5468\u56db','\u5468\u4e94','\u5468\u516d'][d.getDay()] + '\u300b';
+}
+
+function _tagName(name) { return name ? '<span style="color:#2c3e50;font-weight:700;">' + name + '</span>' : '<span class="duty-card-empty">\u672a\u5b89\u6392</span>'; }
 
 function renderDutyCards() {
-    const container = document.getElementById('dutyCardList');
-    if (!container || dutyData.length === 0) { renderDutyEmpty(); return; }
-    const baseDateStr = document.getElementById('dutyDateSelector').value;
-    const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
-    baseDate.setHours(0, 0, 0, 0);
-    const weekDays = ['\u5468\u65e5', '\u5468\u4e00', '\u5468\u4e8c', '\u5468\u4e09', '\u5468\u56db', '\u5468\u4e94', '\u5468\u516d'];
-    let html = '';
+    const area = document.getElementById('dutyCardArea');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const labels = ['\u4eca\u5929', '\u660e\u5929', '\u540e\u5929'];
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">';
     for (let i = 0; i <= 2; i++) {
-        const targetDate = new Date(baseDate);
-        targetDate.setDate(baseDate.getDate() + i);
-        const record = dutyData.find(d => d.date.getFullYear() === targetDate.getFullYear() && d.date.getMonth() === targetDate.getMonth() && d.date.getDate() === targetDate.getDate());
-        const dateStr = (targetDate.getMonth() + 1) + '\u6708' + targetDate.getDate() + '\u65e5 ' + weekDays[targetDate.getDay()];
+        const d = new Date(today); d.setDate(today.getDate() + i);
+        const rec = _findDuty(today, i);
+        const leader = rec ? rec.leader : '';
         const isToday = i === 0;
-        const tagText = isToday ? '\u4eca\u5929' : (i === 1 ? '\u660e\u5929' : '\u540e\u5929');
-        const leader = record ? record.leader : '\u672a\u5b89\u6392';
-        const expert = record ? record.expert : '-';
-        const staff = record ? record.staff : '-';
-        html += '<div class="duty-card ' + (isToday ? 'is-today' : '') + '">' +
-            '<div class="duty-card-header">' +
-            '<span class="duty-date-text">' + dateStr + '</span>' +
-            '<span class="duty-tag' + (isToday ? ' is-today-tag' : '') + '">' + tagText + '</span>' +
-            '</div>' +
-            '<div class="duty-info-row"><span class="duty-info-label">\u5e26\u73ed\u9886\u5bfc</span><span class="duty-info-value">' + leader + '</span></div>' +
-            '<div class="duty-info-row"><span class="duty-info-label">\u503c\u73ed\u4e13\u5bb6</span><span class="duty-info-value">' + expert + '</span></div>' +
-            '<div class="duty-info-row"><span class="duty-info-label">\u503c\u73ed\u4eba\u5458</span><span class="duty-info-value">' + staff + '</span></div>' +
+        html += '<div class="duty-card' + (isToday ? ' is-today' : '') + '">' +
+            '<div class="duty-card-label">' + labels[i] + '</div>' +
+            '<div style="font-size:12px;color:#888;margin-bottom:4px;">' + _fmtDate(d) + '</div>' +
+            '<div class="duty-card-name">' + (leader || '<span class="duty-card-empty">\u672a\u5b89\u6392</span>') + '</div>' +
             '</div>';
     }
-    container.innerHTML = html;
+    html += '</div>';
+    area.innerHTML = html;
 }
 
-function renderDutyEmpty() {
-    const container = document.getElementById('dutyCardList');
-    if (container) container.innerHTML = '<div style="text-align:center; color:#999; padding:30px; font-size:13px;">\u6682\u65e0\u6392\u73ed\u6570\u636e<br>\u8bf7\u70b9\u51fb\u53f3\u4e0a\u89d2\u5bfc\u5165 Excel \u8868\u683c</div>';
+function renderDutyCustom() {
+    const area = document.getElementById('dutyCardArea');
+    const dateStr = document.getElementById('dutyCustomDate').value;
+    if (!dateStr) { renderDutyCards(); return; }
+    const d = new Date(dateStr);
+    if (isNaN(d)) { renderDutyCards(); return; }
+    d.setHours(0, 0, 0, 0);
+    const rec = _dutyData.find(r => r.date.getFullYear() === d.getFullYear() && r.date.getMonth() === d.getMonth() && r.date.getDate() === d.getDate());
+    area.innerHTML = '<div style="padding:12px 0;">' +
+        '<div style="margin-bottom:8px;font-size:13px;color:#888;">查询日期：' + _fmtDate(d) + '</div>' +
+        '<div style="background:#f9fbff;border:1px solid #e8eef8;border-radius:10px;padding:16px;">' +
+        '<div style="font-size:12px;color:#999;margin-bottom:4px;">值班领导</div>' +
+        '<div style="font-size:18px;font-weight:700;color:#2c3e50;">' + (rec ? rec.leader : '<span style="color:#ccc;">\u672a\u5b89\u6392</span>') + '</div>' +
+        '</div>' +
+        '<div style="margin-top:10px;"><button class="btn btn-secondary btn-sm" onclick="renderDutyCards()">\u8fd4\u56de\u4e09\u65e5\u699c</button></div>';
 }
 
-function generateDutyCopy() {
-    if (dutyData.length === 0) { alert('\u8bf7\u5148\u4e0a\u4f20\u6392\u73ed\u8868'); return; }
-    const baseDateStr = document.getElementById('dutyDateSelector').value;
-    const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
-    baseDate.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(baseDate); tomorrow.setDate(baseDate.getDate() + 1);
-    const dayAfter = new Date(baseDate); dayAfter.setDate(baseDate.getDate() + 2);
-    const recordT = dutyData.find(d => d.date.getFullYear() === tomorrow.getFullYear() && d.date.getMonth() === tomorrow.getMonth() && d.date.getDate() === tomorrow.getDate());
-    const recordA = dutyData.find(d => d.date.getFullYear() === dayAfter.getFullYear() && d.date.getMonth() === dayAfter.getMonth() && d.date.getDate() === dayAfter.getDate());
-    const name1 = recordT ? recordT.leader : '(\u672a\u77e5)';
-    const name2 = recordA ? recordA.leader : '(\u672a\u77e5)';
+function updateDutyCopyPreview() {
+    if (_dutyData.length === 0) {
+        document.getElementById('dutyCopyPreview').innerText = '请先导入值班表查看';
+        return;
+    }
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
+    const r1 = _findDuty(today, 1);
+    const r2 = _findDuty(today, 2);
+    const name1 = r1 ? r1.leader : '\u672a\u77e5';
+    const name2 = r2 ? r2.leader : '\u672a\u77e5';
+    const text = '\u5de5\u4f5c\u63d0\u9192\uff1a\u4eca\u65e5\u591c\u95f4\u503c\u73ed\u9886\u5bfc' + name1 + '\uff0c\u660e\u65e5\u591c\u95f4\u503c\u73ed\u9886\u5bfc' + name2 + '\u3002';
+    document.getElementById('dutyCopyPreview').innerText = text;
+}
+
+function copyDutyReminder() {
+    if (_dutyData.length === 0) { showToast('\u26a0 \u8bf7\u5148\u5bfc\u5165\u503c\u73ed\u8868'); return; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    const r1 = _findDuty(today, 1);
+    const r2 = _findDuty(today, 2);
+    const name1 = r1 ? r1.leader : '\u672a\u77e5';
+    const name2 = r2 ? r2.leader : '\u672a\u77e5';
     const text = '\u5de5\u4f5c\u63d0\u9192\uff1a\u4eca\u65e5\u591c\u95f4\u503c\u73ed\u9886\u5bfc' + name1 + '\uff0c\u660e\u65e5\u591c\u95f4\u503c\u73ed\u9886\u5bfc' + name2 + '\u3002';
     navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('dutyCopyBtn');
         if (!btn) return;
         const orig = btn.innerHTML;
-        btn.style.backgroundColor = '#52c41a';
         btn.innerHTML = '\u2705 \u5df2\u590d\u5236\u6210\u529f';
-        setTimeout(() => { btn.style.backgroundColor = ''; btn.innerHTML = orig; }, 2000);
-    }).catch(() => { alert('\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236\uff1a' + text); });
-}
-
-function updateDutyStatus(msg) {
-    const el = document.getElementById('dutyStatusMsg');
-    if (el) el.innerText = msg;
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    }).catch(() => {
+        const preview = document.getElementById('dutyCopyPreview');
+        showToast('\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236');
+    });
 }
 
 // ==================== 会议室状态显示屏 ====================
@@ -1623,8 +1605,26 @@ function exportMeetingLog() {
 </html
     <div id="module-reminder" class="module" style="display:none;">
         <div class="module-title"><span>🔔</span> 值班情况</div>
-        <div class="reminder-content">
-            <div style="text-align:center; padding:60px 20px; color:#bfbfbf; font-size:14px;">暂无内容</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <label for="dutyFileInput" class="btn btn-primary" style="cursor:pointer;">📂 导入值班表</label>
+            <input type="file" id="dutyFileInput" accept=".xlsx,.xls" style="display:none">
+            <span style="font-size:12px;color:#999;">（Excel第1列日期，第3列带班领导）</span>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+            <label style="font-weight:500;margin-bottom:6px;display:block;">🔍 自定义查看日期</label>
+            <div style="display:flex;gap:10px;align-items:center;">
+                <input type="date" id="dutyCustomDate" style="max-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;">
+                <button class="btn btn-secondary btn-sm" onclick="renderDutyCustom()">查询</button>
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('dutyCustomDate').value='';renderDutyCustom();">重置</button>
+            </div>
+        </div>
+        <div id="dutyCardArea">
+            <div style="text-align:center;padding:40px;color:#bfbfbf;font-size:14px;">暂无数据，请先导入值班表</div>
+        </div>
+        <div style="margin-top:16px;padding:14px 16px;background:#f0f7ff;border-radius:10px;border:1px solid #d0e8ff;">
+            <div style="font-weight:600;font-size:14px;color:#4a90e2;margin-bottom:8px;">📋 工作提醒生成</div>
+            <div style="font-size:13px;color:#555;margin-bottom:10px;line-height:1.6;" id="dutyCopyPreview">请先导入值班表查看</div>
+            <button class="btn btn-success" style="width:100%;" id="dutyCopyBtn" onclick="copyDutyReminder()">📋 复制工作提醒</button>
         </div>
     </div>
 
