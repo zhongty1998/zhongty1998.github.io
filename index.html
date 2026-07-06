@@ -1236,9 +1236,9 @@ function _handleDutyUpload(e) {
                 }
                 if (!isNaN(d)) _dutyData.push({
                     date: d,
-                    leader: (row[1] || '').trim(),
-                    director: (row[2] || '').trim(),
-                    staff: (row[3] || '').trim()
+                    leader: (row[2] || '').trim(),
+                    director: (row[3] || '').trim(),
+                    staff: (row[4] || '').trim()
                 });
             }
             await _saveDuty(_dutyData);
@@ -1280,7 +1280,7 @@ function renderDutyCards() {
             '<span class="duty-tag' + (isToday ? ' is-today-tag' : '') + '">' + labels[i] + '</span>' +
             '</div>' +
             _dutyRow('\u5e26\u73ed\u9886\u5bfc', rec ? rec.leader : '') +
-            _dutyRow('\u503c\u73ed\u4e3b\u4efb', rec ? rec.director : '') +
+            _dutyRow('\u9996\u5e2d\u548c\u603b\u76d1', rec ? rec.director : '') +
             _dutyRow('\u503c\u73ed\u4eba\u5458', rec ? rec.staff : '') +
             '</div>';
     }
@@ -1627,7 +1627,7 @@ function exportMeetingLog() {
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
             <label for="dutyFileInput" class="btn btn-primary" style="cursor:pointer;">📂 导入值班表</label>
             <input type="file" id="dutyFileInput" accept=".xlsx,.xls" style="display:none">
-            <span style="font-size:12px;color:#999;">（日期 / 带班领导 / 值班主任 / 值班人员）</span>
+            <span style="font-size:12px;color:#999;">（第1列日期 第3列领导 第4列首席和总监 第5列人员）</span>
         </div>
         <div class="form-group" style="margin-bottom:16px;">
             <label style="font-weight:500;margin-bottom:6px;display:block;">🔍 自定义查看日期</label>
