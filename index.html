@@ -139,6 +139,28 @@
         }
 
 
+
+        /* ===== 会议提醒模块 ===== */
+        .reminder-content { padding: 20px; }
+        .reminder-list { display: flex; flex-direction: column; gap: 12px; }
+        .reminder-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #4a90e2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .reminder-item.urgent { border-left-color: #ff4d4f; background: #fff2f0; }
+        .reminder-item.today { border-left-color: #52c41a; }
+        .reminder-info { flex: 1; }
+        .reminder-title { font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 6px; }
+        .reminder-meta { font-size: 13px; color: #8c8c8c; }
+        .reminder-meta span { margin-right: 16px; }
+        .reminder-time { font-size: 14px; color: #4a90e2; font-weight: 500; }
+        .reminder-empty { text-align: center; padding: 60px 20px; color: #bfbfbf; font-size: 14px; }
         /* ===== 会议室状态显示屏 ===== */
         #module-roomstatus {
             background: transparent;
@@ -593,6 +615,7 @@
         <div class="nav-tab active" onclick="switchTab('meeting')" id="tab-meeting">📋 领导会议</div>
         <div class="nav-tab" onclick="switchTab('booking')" id="tab-booking">📅 会议室预定</div>
         <div class="nav-tab" onclick="switchTab('roomstatus')" id="tab-roomstatus">🚪 会议室状态</div>
+        <div class="nav-tab" onclick="switchTab('reminder')" id="tab-reminder">🔔 会议提醒</div>
     </div>
 
     <div id="module-meeting" class="module">
@@ -1415,4 +1438,14 @@ function exportMeetingLog() {
 </script>
 
 </body>
-</html>
+</html
+    <div id="module-reminder" class="module" style="display:none;">
+        <div class="module-title"><span>🔔</span> 会议提醒</div>
+        <div class="reminder-content">
+            <div class="reminder-list" id="reminderList">
+                <div class="reminder-empty">暂无待召开的会议</div>
+            </div>
+        </div>
+    </div>
+
+>
