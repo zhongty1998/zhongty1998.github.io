@@ -1,3 +1,4 @@
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -140,27 +141,35 @@
 
 
 
-        /* ===== 会议提醒模块 ===== */
-        .reminder-content { padding: 20px; }
-        .reminder-list { display: flex; flex-direction: column; gap: 12px; }
-        .reminder-item {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-left: 4px solid #4a90e2;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .reminder-item.urgent { border-left-color: #ff4d4f; background: #fff2f0; }
-        .reminder-item.today { border-left-color: #52c41a; }
-        .reminder-info { flex: 1; }
-        .reminder-title { font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 6px; }
-        .reminder-meta { font-size: 13px; color: #8c8c8c; }
-        .reminder-meta span { margin-right: 16px; }
-        .reminder-time { font-size: 14px; color: #4a90e2; font-weight: 500; }
-        .reminder-empty { text-align: center; padding: 60px 20px; color: #bfbfbf; font-size: 14px; }
+        /* ===== 值班看板 ===== */
+        .reminder-content { padding: 0; }
+        .duty-widget { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; }
+        .duty-header { padding: 16px 20px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .duty-header-title { font-size: 17px; font-weight: 700; color: #333; }
+        .duty-controls { display: flex; gap: 10px; align-items: center; }
+        .duty-upload-btn { font-size: 12px; color: #1677ff; cursor: pointer; background: #e6f4ff; padding: 5px 10px; border-radius: 6px; transition: all 0.2s; }
+        .duty-upload-btn:hover { background: #bae0ff; }
+        .duty-date-picker { border: 1px solid #ddd; padding: 5px 8px; border-radius: 6px; font-size: 13px; color: #333; outline: none; }
+        .duty-list { padding: 10px; background: #fafafa; }
+        .duty-card { background: #fff; padding: 14px 16px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #f0f0f0; position: relative; }
+        .duty-card.is-today { background: #e6f4ff; border-color: #91caff; box-shadow: 0 2px 8px rgba(22,119,255,0.1); }
+        .duty-card.is-today::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; background: #1677ff; border-radius: 0 4px 4px 0; }
+        .duty-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .duty-date-text { font-weight: 700; font-size: 15px; color: #333; }
+        .duty-tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f5f5f5; color: #999; font-weight: 500; }
+        .duty-tag.is-today-tag { background: #1677ff; color: #fff; }
+        .duty-info-row { display: flex; font-size: 13px; margin-bottom: 6px; line-height: 1.6; }
+        .duty-info-row:last-child { margin-bottom: 0; }
+        .duty-info-label { width: 70px; flex-shrink: 0; color: #888; }
+        .duty-info-value { color: #333; font-weight: 500; }
+        .duty-footer { padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; }
+        .duty-copy-btn { width: 100%; padding: 12px; background: #1677ff; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .duty-copy-btn:hover { background: #0958d9; }
+        .duty-status { text-align: center; font-size: 11px; color: #ccc; padding: 8px; background: #fff; }
+        .duty-footer { padding: 16px 20px; background: #fff; border-top: 1px solid #f0f0f0; }
+        .duty-copy-btn { width: 100%; padding: 12px; background: #1677ff; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .duty-copy-btn:hover { background: #0958d9; }
+        .duty-status { text-align: center; font-size: 11px; color: #ccc; padding: 8px; background: #fff; }
         /* ===== 会议室状态显示屏 ===== */
         #module-roomstatus {
             background: transparent;
@@ -903,6 +912,7 @@ function switchTab(tab) {
     document.getElementById('tab-' + tab).classList.add('active');
     if (tab === 'booking') renderRoomStatus();
     if (tab === 'roomstatus') { loadFromStorage(); startRoomStatusClock(); }
+    if (tab === 'reminder') { initDutyWidget(); }
 }
 
 function toggleCustomLocation() { document.getElementById('customLocationGroup').style.display = document.getElementById('meetingLocation').value === 'custom' ? 'block' : 'none'; }
@@ -1161,6 +1171,178 @@ function renderRoomStatus() {
     }).join('');
 }
 
+
+// ==================== 值班看板 ====================
+let dutyData = [];
+const DUTY_DB_NAME = 'DutyScheduleDB';
+const DUTY_STORE_NAME = 'schedules';
+
+function openDutyDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DUTY_DB_NAME, 1);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(DUTY_STORE_NAME)) {
+                db.createObjectStore(DUTY_STORE_NAME, { keyPath: 'id' });
+            }
+        };
+        request.onsuccess = (event) => resolve(event.target.result);
+        request.onerror = (event) => reject(event.target.error);
+    });
+}
+
+async function saveDutyToDB(data) {
+    const db = await openDutyDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([DUTY_STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(DUTY_STORE_NAME);
+        store.put({ id: 'current', data: data });
+        transaction.oncomplete = () => resolve();
+        transaction.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function loadDutyFromDB() {
+    const db = await openDutyDB();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([DUTY_STORE_NAME], 'readonly');
+        const store = transaction.objectStore(DUTY_STORE_NAME);
+        const request = store.get('current');
+        request.onsuccess = () => resolve(request.result ? request.result.data : null);
+        request.onerror = (e) => reject(e.target.error);
+    });
+}
+
+async function initDutyWidget() {
+    const today = new Date();
+    const dateSel = document.getElementById('dutyDateSelector');
+    if (dateSel) {
+        dateSel.valueAsDate = today;
+        dateSel.addEventListener('change', renderDutyCards);
+    }
+    const fileInput = document.getElementById('dutyFileInput');
+    if (fileInput) {
+        fileInput.removeEventListener('change', handleDutyFileUpload);
+        fileInput.addEventListener('change', handleDutyFileUpload);
+    }
+    try {
+        const savedData = await loadDutyFromDB();
+        if (savedData && savedData.length > 0) {
+            dutyData = savedData;
+            renderDutyCards();
+            updateDutyStatus('\u2705 已加载缓存 (' + dutyData.length + '条记录)');
+        } else {
+            renderDutyEmpty();
+            updateDutyStatus('\u26a0 未检测到数据，请首次导入排班表');
+        }
+    } catch(e) {
+        renderDutyEmpty();
+        updateDutyStatus('\u26a0 数据库读取失败');
+    }
+}
+
+function handleDutyFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    updateDutyStatus('\ud83c\udd98 正在解析表格...');
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+        try {
+            const data = new Uint8Array(ev.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            await processDutyData(jsonData);
+            updateDutyStatus('\u2705 导入成功并已自动保存！');
+        } catch(err) {
+            alert('表格解析失败，请检查格式是否正确');
+            updateDutyStatus('\u274c 解析失败');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+async function processDutyData(rows) {
+    dutyData = [];
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row[0]) continue;
+        let dateObj;
+        if (typeof row[0] === 'number') {
+            dateObj = new Date(Math.round((row[0] - 25569) * 86400 * 1000));
+        } else {
+            dateObj = new Date(row[0].toString().replace(/-/g, '/'));
+        }
+        if (!isNaN(dateObj)) {
+            dutyData.push({ date: dateObj, leader: row[2] || '-', expert: row[3] || '-', staff: row[4] || '-' });
+        }
+    }
+    await saveDutyToDB(dutyData);
+    renderDutyCards();
+}
+
+function renderDutyCards() {
+    const container = document.getElementById('dutyCardList');
+    if (!container || dutyData.length === 0) { renderDutyEmpty(); return; }
+    const baseDateStr = document.getElementById('dutyDateSelector').value;
+    const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
+    baseDate.setHours(0, 0, 0, 0);
+    const weekDays = ['\u5468\u65e5', '\u5468\u4e00', '\u5468\u4e8c', '\u5468\u4e09', '\u5468\u56db', '\u5468\u4e94', '\u5468\u516d'];
+    let html = '';
+    for (let i = 0; i <= 2; i++) {
+        const targetDate = new Date(baseDate);
+        targetDate.setDate(baseDate.getDate() + i);
+        const record = dutyData.find(d => d.date.getFullYear() === targetDate.getFullYear() && d.date.getMonth() === targetDate.getMonth() && d.date.getDate() === targetDate.getDate());
+        const dateStr = (targetDate.getMonth() + 1) + '\u6708' + targetDate.getDate() + '\u65e5 ' + weekDays[targetDate.getDay()];
+        const isToday = i === 0;
+        const tagText = isToday ? '\u4eca\u5929' : (i === 1 ? '\u660e\u5929' : '\u540e\u5929');
+        const leader = record ? record.leader : '\u672a\u5b89\u6392';
+        const expert = record ? record.expert : '-';
+        const staff = record ? record.staff : '-';
+        html += '<div class="duty-card ' + (isToday ? 'is-today' : '') + '">' +
+            '<div class="duty-card-header">' +
+            '<span class="duty-date-text">' + dateStr + '</span>' +
+            '<span class="duty-tag' + (isToday ? ' is-today-tag' : '') + '">' + tagText + '</span>' +
+            '</div>' +
+            '<div class="duty-info-row"><span class="duty-info-label">\u5e26\u73ed\u9886\u5bfc</span><span class="duty-info-value">' + leader + '</span></div>' +
+            '<div class="duty-info-row"><span class="duty-info-label">\u503c\u73ed\u4e13\u5bb6</span><span class="duty-info-value">' + expert + '</span></div>' +
+            '<div class="duty-info-row"><span class="duty-info-label">\u503c\u73ed\u4eba\u5458</span><span class="duty-info-value">' + staff + '</span></div>' +
+            '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function renderDutyEmpty() {
+    const container = document.getElementById('dutyCardList');
+    if (container) container.innerHTML = '<div style="text-align:center; color:#999; padding:30px; font-size:13px;">\u6682\u65e0\u6392\u73ed\u6570\u636e<br>\u8bf7\u70b9\u51fb\u53f3\u4e0a\u89d2\u5bfc\u5165 Excel \u8868\u683c</div>';
+}
+
+function generateDutyCopy() {
+    if (dutyData.length === 0) { alert('\u8bf7\u5148\u4e0a\u4f20\u6392\u73ed\u8868'); return; }
+    const baseDateStr = document.getElementById('dutyDateSelector').value;
+    const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
+    baseDate.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(baseDate); tomorrow.setDate(baseDate.getDate() + 1);
+    const dayAfter = new Date(baseDate); dayAfter.setDate(baseDate.getDate() + 2);
+    const recordT = dutyData.find(d => d.date.getFullYear() === tomorrow.getFullYear() && d.date.getMonth() === tomorrow.getMonth() && d.date.getDate() === tomorrow.getDate());
+    const recordA = dutyData.find(d => d.date.getFullYear() === dayAfter.getFullYear() && d.date.getMonth() === dayAfter.getMonth() && d.date.getDate() === dayAfter.getDate());
+    const name1 = recordT ? recordT.leader : '(\u672a\u77e5)';
+    const name2 = recordA ? recordA.leader : '(\u672a\u77e5)';
+    const text = '\u5de5\u4f5c\u63d0\u9192\uff1a\u4eca\u65e5\u591c\u95f4\u503c\u73ed\u9886\u5bfc' + name1 + '\uff0c\u660e\u65e5\u591c\u95f4\u503c\u73ed\u9886\u5bfc' + name2 + '\u3002';
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('dutyCopyBtn');
+        if (!btn) return;
+        const orig = btn.innerHTML;
+        btn.style.backgroundColor = '#52c41a';
+        btn.innerHTML = '\u2705 \u5df2\u590d\u5236\u6210\u529f';
+        setTimeout(() => { btn.style.backgroundColor = ''; btn.innerHTML = orig; }, 2000);
+    }).catch(() => { alert('\u590d\u5236\u5931\u8d25\uff0c\u8bf7\u624b\u52a8\u590d\u5236\uff1a' + text); });
+}
+
+function updateDutyStatus(msg) {
+    const el = document.getElementById('dutyStatusMsg');
+    if (el) el.innerText = msg;
+}
 
 // ==================== 会议室状态显示屏 ====================
 let roomClockInterval = null;
@@ -1442,8 +1624,22 @@ function exportMeetingLog() {
     <div id="module-reminder" class="module" style="display:none;">
         <div class="module-title"><span>🔔</span> 值班情况</div>
         <div class="reminder-content">
-            <div class="reminder-list" id="reminderList">
-                <div class="reminder-empty">暂无待召开的会议</div>
+            <div class="duty-widget">
+                <div class="duty-header">
+                    <div class="duty-header-title">📅 值班看板</div>
+                    <div class="duty-controls">
+                        <input type="date" id="dutyDateSelector" class="duty-date-picker">
+                        <label for="dutyFileInput" class="duty-upload-btn">📂 更新排班表</label>
+                        <input type="file" id="dutyFileInput" accept=".xlsx, .xls" style="display:none">
+                    </div>
+                </div>
+                <div class="duty-list" id="dutyCardList">
+                    <div style="text-align:center; color:#999; padding:30px; font-size:13px;">正在加载缓存数据...</div>
+                </div>
+                <div class="duty-footer">
+                    <button class="duty-copy-btn" id="dutyCopyBtn" onclick="generateDutyCopy()">📋 生成工作提醒 (复制)</button>
+                </div>
+                <div class="duty-status" id="dutyStatusMsg">系统就绪</div>
             </div>
         </div>
     </div>
