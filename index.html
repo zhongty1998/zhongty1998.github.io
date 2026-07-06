@@ -142,13 +142,20 @@
 
 
         /* ===== 值班情况 ===== */
-        .duty-card { background: #f9fbff; border: 1px solid #e8eef8; border-radius: 10px; padding: 14px 16px; }
-        .duty-card.is-today { background: #e8f2ff; border-color: #a8c8f0; }
-        .duty-card-label { font-size: 12px; color: #999; font-weight: 500; margin-bottom: 4px; }
-        .duty-card.is-today .duty-card-label { color: #4a90e2; }
-        .duty-card-name { font-size: 16px; font-weight: 700; color: #2c3e50; }
-        .duty-card-empty { font-size: 13px; color: #ccc; }
-        .duty-copy-preview { background: #fff; border: 1px solid #e0eaf8; border-radius: 8px; padding: 12px; font-size: 13px; color: #555; line-height: 1.7; }
+        .duty-stack { display: flex; flex-direction: column; gap: 12px; }
+        .duty-card { background: #fff; border: 1px solid #ebeef5; border-radius: 10px; padding: 16px 18px; transition: all 0.2s; }
+        .duty-card.is-today { background: #eaf3ff; border-color: #b3d4f0; border-left: 4px solid #4a90e2; padding-left: 14px; }
+        .duty-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .duty-card-date { font-size: 15px; font-weight: 700; color: #2c3e50; }
+        .duty-card.is-today .duty-card-date { color: #1f5fa8; }
+        .duty-tag { font-size: 12px; padding: 3px 10px; border-radius: 6px; background: #f0f2f5; color: #999; font-weight: 500; }
+        .duty-tag.is-today-tag { background: #4a90e2; color: #fff; }
+        .duty-row { display: flex; align-items: baseline; margin-bottom: 6px; line-height: 1.7; }
+        .duty-row:last-child { margin-bottom: 0; }
+        .duty-row-label { width: 90px; flex-shrink: 0; color: #999; font-size: 13px; }
+        .duty-row-value { color: #2c3e50; font-weight: 600; font-size: 14px; }
+        .duty-row-value.empty { color: #d0d0d0; font-weight: 400; }
+        .duty-empty-card { text-align: center; padding: 50px 20px; color: #bfbfbf; font-size: 14px; }
 
         /* ===== 会议室状态显示屏 ===== */
         #module-roomstatus {
@@ -1227,7 +1234,12 @@ function _handleDutyUpload(e) {
                 } else {
                     d = new Date(row[0].toString().replace(/-/g, '/'));
                 }
-                if (!isNaN(d)) _dutyData.push({ date: d, leader: (row[2] || '').trim() });
+                if (!isNaN(d)) _dutyData.push({
+                    date: d,
+                    leader: (row[1] || '').trim(),
+                    director: (row[2] || '').trim(),
+                    staff: (row[3] || '').trim()
+                });
             }
             await _saveDuty(_dutyData);
             renderDutyCards();
@@ -1257,20 +1269,29 @@ function renderDutyCards() {
     const area = document.getElementById('dutyCardArea');
     const today = new Date(); today.setHours(0,0,0,0);
     const labels = ['\u4eca\u5929', '\u660e\u5929', '\u540e\u5929'];
-    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">';
+    let h = '<div class="duty-stack">';
     for (let i = 0; i <= 2; i++) {
         const d = new Date(today); d.setDate(today.getDate() + i);
         const rec = _findDuty(today, i);
-        const leader = rec ? rec.leader : '';
         const isToday = i === 0;
-        html += '<div class="duty-card' + (isToday ? ' is-today' : '') + '">' +
-            '<div class="duty-card-label">' + labels[i] + '</div>' +
-            '<div style="font-size:12px;color:#888;margin-bottom:4px;">' + _fmtDate(d) + '</div>' +
-            '<div class="duty-card-name">' + (leader || '<span class="duty-card-empty">\u672a\u5b89\u6392</span>') + '</div>' +
+        h += '<div class="duty-card' + (isToday ? ' is-today' : '') + '">' +
+            '<div class="duty-card-head">' +
+            '<span class="duty-card-date">' + _fmtDate(d) + '</span>' +
+            '<span class="duty-tag' + (isToday ? ' is-today-tag' : '') + '">' + labels[i] + '</span>' +
+            '</div>' +
+            _dutyRow('\u5e26\u73ed\u9886\u5bfc', rec ? rec.leader : '') +
+            _dutyRow('\u503c\u73ed\u4e3b\u4efb', rec ? rec.director : '') +
+            _dutyRow('\u503c\u73ed\u4eba\u5458', rec ? rec.staff : '') +
             '</div>';
     }
-    html += '</div>';
-    area.innerHTML = html;
+    h += '</div>';
+    area.innerHTML = h;
+}
+
+function _dutyRow(label, value) {
+    const v = value ? value : '-';
+    const cls = value ? '' : ' empty';
+    return '<div class="duty-row"><span class="duty-row-label">' + label + '</span><span class="duty-row-value' + cls + '">' + v + '</span></div>';
 }
 
 function renderDutyCustom() {
@@ -1608,7 +1629,7 @@ function exportMeetingLog() {
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
             <label for="dutyFileInput" class="btn btn-primary" style="cursor:pointer;">📂 导入值班表</label>
             <input type="file" id="dutyFileInput" accept=".xlsx,.xls" style="display:none">
-            <span style="font-size:12px;color:#999;">（Excel第1列日期，第3列带班领导）</span>
+            <span style="font-size:12px;color:#999;">（日期 / 带班领导 / 值班主任 / 值班人员）</span>
         </div>
         <div class="form-group" style="margin-bottom:16px;">
             <label style="font-weight:500;margin-bottom:6px;display:block;">🔍 自定义查看日期</label>
