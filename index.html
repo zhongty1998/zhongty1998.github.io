@@ -822,6 +822,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await cloudLoad();
     renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
     document.getElementById('syncStatus').textContent = '💾 加载中...';
+    // 确保本地数据同步到云端（防止本地有记录但未上传）
+    await cloudSave();
 });
 
 // ==================== Tab 切换 ====================
