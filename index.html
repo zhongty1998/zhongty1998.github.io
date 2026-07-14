@@ -5,6 +5,53 @@
     <title>会议管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ===== 密码遮罩 ===== */
+        #pwOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 99999;
+            backdrop-filter: blur(4px);
+        }
+        #pwOverlay.hidden { display: none; }
+        .pw-box {
+            background: #fff; border-radius: 16px; padding: 40px 36px;
+            width: 340px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: pwSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        @keyframes pwSlideIn {
+            from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+            to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .pw-box h2 { color: #2c3e50; font-size: 22px; margin-bottom: 8px; }
+        .pw-box p  { color: #888; font-size: 13px; margin-bottom: 24px; }
+        .pw-box input {
+            width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 18px; text-align: center;
+            letter-spacing: 8px; outline: none; margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .pw-box input:focus { border-color: #4a90e2; }
+        .pw-box button {
+            width: 100%; padding: 12px; background: #4a90e2; color: #fff;
+            border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .pw-box button:hover { background: #3a7bc8; }
+        .pw-error {
+            color: #e74c3c; font-size: 13px; margin-top: 10px;
+            min-height: 18px;
+        }
+        /* ===== 页面渐入动画 ===== */
+        #container {
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+        #container.page-visible {
+            opacity: 1;
+        }
+
         body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f0f3f7; color: #333; min-height: 100vh; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
         .header { background: #2c3e50; color: white; padding: 16px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
@@ -478,6 +525,15 @@
 
 <body>
 <!-- 开屏动画 -->
+        <div id="pwOverlay">
+            <div class="pw-box">
+                <h2>🔐 请输入访问密码</h2>
+                <p>仅限内部人员使用</p>
+                <input type="password" id="pwInput" placeholder="● ● ● ●" maxlength="20" autocomplete="off" />
+                <button id="pwEnterBtn" onclick="checkGatePassword()">登 录</button>
+                <div class="pw-error" id="pwError"></div>
+            </div>
+        </div>
 <div id="splashOverlay" class="splash-overlay">
     <div class="splash-icon">📋</div>
     <div class="splash-title">会议管理系统</div>
@@ -629,6 +685,28 @@
 // ==================== 全局变量 ====================
 const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏', '刘钧海', '吕 军', '娄永昌'];
 let meetingRecords = [];
+
+        function checkGatePassword() {
+            var val = document.getElementById('pwInput').value.trim();
+            if (val === '1234') {
+                localStorage.setItem('meeting_auth', 'true');
+                document.getElementById('pwOverlay').classList.add('hidden');
+                afterAuthShow();
+            } else {
+                document.getElementById('pwError').textContent = '⚠ 密码错误，请重新输入';
+                document.getElementById('pwInput').value = '';
+                document.getElementById('pwInput').focus();
+            }
+        }
+        function afterAuthShow() {
+            // 触发页面内容渐入
+            var splash = document.getElementById('splashOverlay');
+            if (splash) {
+                splash.style.display = 'none';
+            }
+            document.getElementById('container').classList.add('page-visible');
+        }
+
 let bookingRecords = [];
 let deletedMeetingRecords = [];  // 🗑 已删除记录的UUID（防止云端覆盖丢失）
 let deletedBookingRecords = [];
@@ -822,8 +900,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await cloudLoad();
     renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
     document.getElementById('syncStatus').textContent = '💾 加载中...';
-    // 确保本地数据同步到云端（防止本地有记录但未上传）
-    await cloudSave();
+    // 如果已认证，触发页面渐入；否则保持透明（等待密码验证）
+    if (localStorage.getItem('meeting_auth') === 'true') {
+        document.getElementById('container').classList.add('page-visible');
+    }
+
 });
 
 // ==================== Tab 切换 ====================
@@ -1374,15 +1455,18 @@ function exportMeetingLog() {
 (function() {
     var splash = document.getElementById('splashOverlay');
     if (!splash) return;
+    // 如果未认证，不播放 splash，直接由 afterAuthShow 处理
+    if (localStorage.getItem('meeting_auth') !== 'true') return;
     // 显示动画
     requestAnimationFrame(function() {
         splash.classList.add('show');
     });
-    // 2.8秒后淡出
+    // 2.8秒后淡出 + 触发内容渐入
     setTimeout(function() {
         splash.classList.add('fade-out');
         setTimeout(function() {
             splash.style.display = 'none';
+            document.getElementById('container').classList.add('page-visible');
         }, 800);
     }, 2800);
 })();
