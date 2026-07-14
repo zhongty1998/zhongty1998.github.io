@@ -399,147 +399,6 @@
         }
 
 
-        /* ===== 值班情况模块 ===== */
-        #module-duty .module-title { color: #e67e22; }
-
-        /* 上传区 */
-        .duty-upload-area {
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            border-radius: 10px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-        }
-
-        /* 三天值班卡片 */
-        .duty-cards-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .duty-card {
-            background: #fff;
-            border-radius: 14px;
-            padding: 18px 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border: 2px solid #eee;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .duty-card.duty-today {
-            background: #eff6ff;
-            border-color: #4a90e2;
-        }
-        .duty-card-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .duty-today .duty-card-label {
-            color: #4a90e2;
-        }
-        .duty-card-date {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-        }
-        .duty-card-content {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 4px;
-        }
-        .duty-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            padding: 6px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .duty-row:last-child { border-bottom: none; }
-        .duty-label {
-            font-size: 12px;
-            color: #888;
-            white-space: nowrap;
-            min-width: 90px;
-        }
-        .duty-value {
-            font-size: 14px;
-            color: #333;
-            font-weight: 500;
-        }
-        .duty-value.duty-leader {
-            color: #c0392b;
-            font-weight: 700;
-        }
-        .duty-empty {
-            color: #bbb;
-            font-size: 13px;
-            font-style: italic;
-        }
-
-        /* 底部区域：查询 & 提醒 */
-        .duty-bottom-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 16px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .duty-query-row {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-        }
-        .duty-query-result {
-            min-height: 60px;
-        }
-        .duty-query-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 12px 16px;
-            border: 1px solid #dee2e6;
-        }
-        .duty-query-date {
-            font-size: 14px;
-            font-weight: 700;
-            color: #4a90e2;
-            margin-bottom: 8px;
-        }
-        .duty-query-empty {
-            padding: 12px 16px;
-            color: #999;
-            font-size: 13px;
-        }
-        .duty-work-reminder {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .duty-reminder-textarea {
-            width: 100%;
-            min-height: 70px;
-            padding: 12px;
-            border: 2px solid #4a90e2;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            color: #333;
-            resize: vertical;
-            background: #fff;
-            line-height: 1.6;
-        }
-
-        @media (max-width: 768px) {
-            .duty-cards-container { grid-template-columns: 1fr; }
-            .duty-query-row { flex-direction: column; }
-        }
-
         /* ===== 密码登录遮罩 ===== */
         .pw-overlay {
             position: fixed;
@@ -623,7 +482,6 @@
         }
         .splash-overlay.fade-out {
             opacity: 0;
-            pointer-events: none;
         }
         .splash-icon {
             font-size: 80px;
@@ -690,7 +548,18 @@
 
 
 
-
+<div id="pwOverlay" class="pw-overlay">
+    <div class="pw-box">
+        <span class="icon">🔐</span>
+        <h2>会议管理系统</h2>
+        <p>请输入密码以继续</p>
+        <div class="pw-input-group">
+            <input type="password" id="pwInput" placeholder="输入密码" autofocus>
+            <button onclick="checkGatePassword()">进入</button>
+        </div>
+        <div id="pwError" class="pw-error">密码错误，请重试</div>
+    </div>
+</div>
 
 
 <div id="passwordModal">
@@ -725,7 +594,6 @@
         <div class="nav-tab active" onclick="switchTab('meeting')" id="tab-meeting">📋 领导会议</div>
         <div class="nav-tab" onclick="switchTab('booking')" id="tab-booking">📅 会议室预定</div>
         <div class="nav-tab" onclick="switchTab('roomstatus')" id="tab-roomstatus">🚪 会议室状态</div>
-        <div class="nav-tab" onclick="switchTab('duty')" id="tab-duty">🔔 测试</div>
     </div>
 
     <div id="module-meeting" class="module">
@@ -829,70 +697,45 @@
         </div>
     </div>
 </div>
-
-<!-- ===== 第4个Tab：值班情况 ===== -->
-<div id="module-duty" class="module" style="display:none;">
-    <div class="module-title"><span>🔔</span> 值班情况</div>
-
-    <!-- 上传区域 -->
-    <div class="duty-upload-area" id="dutyUploadArea">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <input type="file" id="dutyFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleDutyFileUpload(this)">
-            <button class="btn btn-primary" onclick="document.getElementById('dutyFileInput').click()">📤 上传值班表</button>
-            <span style="font-size:13px;color:#888;">支持 .xlsx / .xls / .csv，请包含「日期 / 星期 / 值班领导 / 首席和总监 / 值班人员」5列</span>
-        </div>
-        <div id="dutyUploadStatus" style="margin-top:8px;font-size:13px;color:#28a745;display:none;"></div>
-    </div>
-
-    <!-- 三天值班卡片 -->
-    <div class="duty-cards-container" id="dutyCardsContainer">
-        <div class="duty-card duty-today" id="dutyCardToday">
-            <div class="duty-card-label">今天</div>
-            <div class="duty-card-date" id="dutyTodayDate"></div>
-            <div class="duty-card-content" id="dutyTodayContent"><span class="duty-empty">暂无数据</span></div>
-        </div>
-        <div class="duty-card" id="dutyCardTomorrow">
-            <div class="duty-card-label">明天</div>
-            <div class="duty-card-date" id="dutyTomorrowDate"></div>
-            <div class="duty-card-content" id="dutyTomorrowContent"><span class="duty-empty">暂无数据</span></div>
-        </div>
-        <div class="duty-card" id="dutyCardAfter">
-            <div class="duty-card-label">后天</div>
-            <div class="duty-card-date" id="dutyAfterDate"></div>
-            <div class="duty-card-content" id="dutyAfterContent"><span class="duty-empty">暂无数据</span></div>
-        </div>
-    </div>
-
-    <!-- 自定义查询 & 工作提醒 -->
-    <div class="duty-bottom-section">
-        <div class="duty-query-row">
-            <div class="form-group" style="flex:1;">
-                <label>自定义查看日期</label>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <input type="date" id="dutyQueryDate" onchange="renderDutyByDate()">
-                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('dutyQueryDate').value='';renderDutyByDate()">清除</button>
-                </div>
-            </div>
-            <div id="dutyQueryResult" class="duty-query-result" style="flex:2;display:none;"></div>
-        </div>
-        <div class="duty-reminder-section">
-            <div style="font-weight:600;color:#555;margin-bottom:8px;">📋 工作提醒（发送日前一天生成）</div>
-            <div id="dutyWorkReminder" class="duty-work-reminder"></div>
-            <button class="btn btn-primary" style="margin-top:10px;" onclick="copyDutyReminder()">📋 一键复制提醒文字</button>
-        </div>
-    </div>
-</div>
-
 <script>
 
+// ===== 密码进入保护 =====
+var PAGE_PASSWORD = '1998';
+(function() {
+    var saved = localStorage.getItem('meeting_pw_auth');
+    if (saved === '1') {
+        document.getElementById('pwOverlay').classList.add('hidden');
+    }
+})();
 
+function checkGatePassword() {
+    var pw = document.getElementById('pwInput').value;
+    if (pw === PAGE_PASSWORD) {
+        localStorage.setItem('meeting_pw_auth', '1');
+        document.getElementById('pwOverlay').classList.add('hidden');
+        document.getElementById('pwError').classList.remove('show');
+    } else {
+        document.getElementById('pwError').classList.add('show');
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+    }
+}
+
+// 回车键提交
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('pwInput');
+    if (input) {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { checkGatePassword(); }
+        });
+    }
+});
 
 
 // ==================== 全局变量 ====================
 const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏', '刘钧海', '吕 军', '娄永昌'];
 let meetingRecords = [];
 let bookingRecords = [];
-let dutyRecords = [];
 let isAuthenticated = false;
 let currentFilter = 'all';
 const STORAGE_KEY = 'meetingSystemData';
@@ -906,12 +749,10 @@ async function cloudLoad() {
     try {
         const results = await Promise.all([
             cloudRequest('list', 'MeetingRecords'),
-            cloudRequest('list', 'BookingRecords'),
-            cloudRequest('list', 'DutyRecords')
+            cloudRequest('list', 'BookingRecords')
         ]);
         meetingRecords = results[0] || [];
-        bookingRecords = results[1] || [];
-        dutyRecords = results[2] || []
+        bookingRecords = results[1] || []
         saveToLocalStorage();
         setCloudStatus('synced');
         showToast('✅ 云端数据加载成功！');
@@ -928,7 +769,6 @@ async function cloudSave() {
     try {
         await cloudRequest('replaceAll', 'MeetingRecords', meetingRecords);
         await cloudRequest('replaceAll', 'BookingRecords', bookingRecords);
-        await cloudRequest('replaceAll', 'DutyRecords', dutyRecords);
 setCloudStatus('synced');
         showToast('✅ 数据已同步到云端！');
         return true;
@@ -966,7 +806,7 @@ function setCloudStatus(s) {
 
 // ==================== 本地存储 ====================
 function saveToLocalStorage() {
-    const data = { meetingRecords, bookingRecords, dutyRecords };
+    const data = { meetingRecords, bookingRecords };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) { console.error('保存失败:', e); }
 }
 
@@ -1030,7 +870,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
     await cloudLoad();
     renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
-    renderDutyCards(); renderDutyWorkReminder();
     document.getElementById('syncStatus').textContent = '💾 加载中...';
 });
 
@@ -1042,7 +881,6 @@ function switchTab(tab) {
     document.getElementById('tab-' + tab).classList.add('active');
     if (tab === 'booking') renderRoomStatus();
     if (tab === 'roomstatus') { loadFromStorage(); startRoomStatusClock(); }
-    if (tab === 'duty') { loadDutyFromCloud(); renderDutyCards(); renderDutyWorkReminder(); }
 }
 
 function toggleCustomLocation() { document.getElementById('customLocationGroup').style.display = document.getElementById('meetingLocation').value === 'custom' ? 'block' : 'none'; }
@@ -1494,259 +1332,6 @@ function renderRoomStatusDisplay() {
             ${mainSectionHTML}
         </div>
         ${nextSectionHTML}`;
-}
-
-
-// ==================== 值班情况（测试Tab）====================
-let dutyRecords = [];
-
-// 从云端加载值班数据
-async function loadDutyFromCloud() {
-    try {
-        dutyRecords = await cloudRequest('list', 'DutyRecords') || [];
-        saveToLocalStorage();
-        renderDutyCards();
-        renderDutyWorkReminder();
-    } catch(e) {
-        console.warn('加载值班数据失败:', e);
-        // 使用本地缓存
-        if (dutyRecords.length === 0) {
-            showToast('⚠️ 无法加载云端值班数据');
-        }
-    }
-}
-
-// 渲染三天值班卡片
-function renderDutyCards() {
-    const today = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const after = new Date(today); after.setDate(today.getDate() + 2);
-
-    const todayStr = formatDutyDate(today);
-    const tomorrowStr = formatDutyDate(tomorrow);
-    const afterStr = formatDutyDate(after);
-
-    document.getElementById('dutyTodayDate').textContent = todayStr;
-    document.getElementById('dutyTomorrowDate').textContent = tomorrowStr;
-    document.getElementById('dutyAfterDate').textContent = afterStr;
-
-    const todayData = dutyRecords.find(r => r.date === todayStr);
-    const tomorrowData = dutyRecords.find(r => r.date === tomorrowStr);
-    const afterData = dutyRecords.find(r => r.date === afterStr);
-
-    renderDutyCardContent('dutyTodayContent', todayData);
-    renderDutyCardContent('dutyTomorrowContent', tomorrowData);
-    renderDutyCardContent('dutyAfterContent', afterData);
-}
-
-function renderDutyCardContent(elId, data) {
-    const el = document.getElementById(elId);
-    if (!data) {
-        el.innerHTML = '<span class="duty-empty">暂无数据</span>';
-        return;
-    }
-    const rows = [
-        data.leader ? '<div class="duty-row"><span class="duty-label">🌙 夜间值班领导</span><span class="duty-value duty-leader">' + data.leader + '</span></div>' : '',
-        data.director ? '<div class="duty-row"><span class="duty-label">👔 首席和总监</span><span class="duty-value">' + data.director + '</span></div>' : '',
-        data.staff ? '<div class="duty-row"><span class="duty-label">👤 值班人员</span><span class="duty-value">' + data.staff + '</span></div>' : ''
-    ].filter(Boolean).join('');
-    el.innerHTML = rows || '<span class="duty-empty">数据不完整</span>';
-}
-
-// 格式化日期为 YYYY-MM-DD
-function formatDutyDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return y + '-' + m + '-' + d;
-}
-
-// 自定义日期查询
-function renderDutyByDate() {
-    const dateStr = document.getElementById('dutyQueryDate').value;
-    const resultEl = document.getElementById('dutyQueryResult');
-
-    if (!dateStr) {
-        resultEl.style.display = 'none';
-        return;
-    }
-
-    const data = dutyRecords.find(r => r.date === dateStr);
-    resultEl.style.display = 'block';
-
-    if (!data) {
-        resultEl.innerHTML = '<div class="duty-query-empty">❌ ' + dateStr + ' 无值班数据</div>';
-        return;
-    }
-
-    const weekday = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][new Date(dateStr).getDay()];
-    resultEl.innerHTML = '<div class="duty-query-card">' +
-        '<div class="duty-query-date">' + dateStr + ' ' + weekday + '</div>' +
-        (data.leader ? '<div class="duty-row"><span class="duty-label">🌙 夜间值班领导</span><span class="duty-value duty-leader">' + data.leader + '</span></div>' : '') +
-        (data.director ? '<div class="duty-row"><span class="duty-label">👔 首席和总监</span><span class="duty-value">' + data.director + '</span></div>' : '') +
-        (data.staff ? '<div class="duty-row"><span class="duty-label">👤 值班人员</span><span class="duty-value">' + data.staff + '</span></div>' : '') +
-        '</div>';
-}
-
-// 生成并渲染工作提醒（提前一天逻辑）
-function renderDutyWorkReminder() {
-    const today = new Date();
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
-
-    const tomorrowStr = formatDutyDate(tomorrow);
-    const dayAfterStr = formatDutyDate(dayAfter);
-
-    const tomorrowData = dutyRecords.find(r => r.date === tomorrowStr);
-    const dayAfterData = dutyRecords.find(r => r.date === dayAfterStr);
-
-    const tomorrowLeader = tomorrowData ? (tomorrowData.leader || '（未排）') : '（未排）';
-    const dayAfterLeader = dayAfterData ? (dayAfterData.leader || '（未排）') : '（未排）';
-
-    // 工作提醒文字：站在发送日次日视角
-    const reminderText = '工作提醒：今日夜间值班领导' + tomorrowLeader + '，明天夜间值班领导' + dayAfterLeader + '。';
-
-    const el = document.getElementById('dutyWorkReminder');
-    el.innerHTML = '<textarea class="duty-reminder-textarea" readonly>' + reminderText + '</textarea>' +
-        '<div style="font-size:12px;color:#888;margin-top:6px;">💡 说明：以上「今日」= 发送日次日，「明天」= 发送日后天，以此类推，方便提前一天发送时直接复制使用。</div>';
-
-    // 存储当前提醒文本供复制使用
-    el.dataset.reminder = reminderText;
-}
-
-// 一键复制工作提醒
-function copyDutyReminder() {
-    const el = document.getElementById('dutyWorkReminder');
-    const text = el.dataset.reminder || el.querySelector('textarea').value;
-    navigator.clipboard.writeText(text).then(function() {
-        showToast('✅ 已复制到剪贴板！');
-    }).catch(function() {
-        // fallback
-        const ta = el.querySelector('textarea');
-        ta.select();
-        document.execCommand('copy');
-        showToast('✅ 已复制到剪贴板！');
-    });
-}
-
-// 处理值班表上传
-async function handleDutyFileUpload(input) {
-    if (!input.files || !input.files[0]) return;
-    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); input.value = ''; return; }
-
-    const file = input.files[0];
-    const statusEl = document.getElementById('dutyUploadStatus');
-
-    showLoading('正在解析值班表...');
-
-    try {
-        const text = await readFileAsText(file);
-        const rows = parseDutyCSV(text);
-
-        if (rows.length === 0) {
-            hideLoading();
-            showToast('⚠️ 未识别到有效数据，请检查文件格式');
-            return;
-        }
-
-        // 更新云端数据（全量替换）
-        const newRecords = [];
-        for (const row of rows) {
-            if (row.date) {
-                newRecords.push({
-                    date: row.date,
-                    leader: row.leader || '',
-                    director: row.director || '',
-                    staff: row.staff || ''
-                });
-            }
-        }
-
-        showLoading('正在上传到云端...');
-        await cloudRequest('replaceAll', 'DutyRecords', newRecords);
-        dutyRecords = newRecords;
-        saveToLocalStorage();
-        loadDutyFromCloud();
-
-        hideLoading();
-        statusEl.textContent = '✅ 成功导入 ' + newRecords.length + ' 条值班记录！';
-        statusEl.style.display = 'block';
-        statusEl.style.color = '#28a745';
-        renderDutyCards();
-        renderDutyWorkReminder();
-        showToast('✅ 值班表已上传到云端！');
-        input.value = '';
-
-    } catch(e) {
-        hideLoading();
-        showToast('⚠️ 解析失败：' + e.message);
-        console.error(e);
-    }
-}
-
-// 读取文件内容
-function readFileAsText(file) {
-    return new Promise(function(resolve, reject) {
-        const reader = new FileReader();
-        reader.onload = function(e) { resolve(e.target.result); };
-        reader.onerror = function(e) { reject(new Error('文件读取失败')); };
-        reader.readAsText(file, 'utf-8');
-    });
-}
-
-// 解析值班 CSV/文本（支持 tab 和逗号分隔）
-function parseDutyCSV(text) {
-    const lines = text.split(/[\r\n]+/).filter(function(l) { return l.trim().length > 0; });
-    const records = [];
-
-    // 跳过表头行
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-
-        // 支持 tab 或逗号分隔
-        let cells;
-        if (line.indexOf('\t') >= 0) {
-            cells = line.split('\t');
-        } else {
-            // 简单逗号分隔（处理日期中的逗号情况）
-            cells = line.split(',');
-        }
-
-        // 清理每个单元格的首尾空白
-        cells = cells.map(function(c) { return c.trim ? c.trim() : c.toString().trim(); });
-
-        // 至少要有日期列
-        if (cells.length >= 1 && cells[0]) {
-            // 尝试标准化日期格式
-            let dateStr = cells[0];
-            // 如果是 YYYY/MM/DD 转为 YYYY-MM-DD
-            dateStr = dateStr.replace(/\//g, '-');
-            // 如果是 MM/DD 加上今年
-            if (/^\d{1,2}-\d{1,2}$/.test(dateStr)) {
-                dateStr = new Date().getFullYear() + '-' + dateStr;
-            }
-            records.push({
-                date: dateStr,
-                leader: cells[3] || cells[2] || '',
-                director: cells[2] || cells[1] || '',
-                staff: cells[4] || cells[3] || ''
-            });
-        }
-    }
-    return records;
-}
-
-// 删除某天值班记录
-function deleteDutyRecord(dateStr) {
-    if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
-    if (!confirm('确定要删除 ' + dateStr + ' 的值班记录吗？')) return;
-    dutyRecords = dutyRecords.filter(function(r) { return r.date !== dateStr; });
-    saveToLocalStorage();
-    cloudRequest('replaceAll', 'DutyRecords', dutyRecords).catch(function(){});
-    renderDutyCards();
-    renderDutyWorkReminder();
-    showToast('✅ 已删除');
 }
 
 // ==================== 领导在厂状态 ====================
