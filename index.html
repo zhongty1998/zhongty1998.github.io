@@ -735,7 +735,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== 全局变量 ====================
 const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏', '刘钧海', '吕 军', '娄永昌'];
 let meetingRecords = [];
-let bookingRecords = [{"_id":"4aee0b4c6a44d5cf0029d53b3649977d","date":"2026-07-02","start":"15:00","end":"16:00","room":"三楼东会议室","person":"纪检","topic":"书记讲授党课","status":"confirmed"},{"_id":"f0e7953e6a4b6457008951566fa2aee6","date":"2026-07-07","start":"09:00","end":"11:00","room":"三楼东会议室","person":"余亚军","topic":"储气库遗留问题讨论会","status":"confirmed"},{"_id":"38fda8636a4b6457005b2c5d034969b7","date":"2026-07-09","start":"09:00","end":"11:00","room":"三楼东会议室","person":"刘琰","topic":"","status":"confirmed"},{"_id":"d666a8c26a5494f5006b36d40b6f308b","date":"2026-07-14","start":"15:30","end":"16:30","room":"三楼东会议室","person":"综 合办","topic":"欢送会","status":"confirmed"},{"_id":"b10ac0526a4281d60009c870048b00ab","date":"2026-06-30","start":"15:00","end":"16:00","room":"二楼中会议室","person":"厂领导","topic":"油气和田新能源板块安全生产专题视频会","status":"confirmed"},{"_id":"4e2973cc6a2fa6f3003ed5a316647320","date":"2026-06-15","start":"15:00","end":"16:00","room":"三楼中会议室","person":"纪检监督室","topic":"迎接油田政治监督检查","status":"confirmed"}];
+let bookingRecords = [];
+let deletedMeetingRecords = [];  // 🗑 已删除记录的UUID（防止云端覆盖丢失）
+let deletedBookingRecords = [];
+let editingRecordUUID = null;  // 正在编辑的记录UUID，编辑后重新保存时复用
+
+function generateUUID() {
+    return 'xxxx-xxxx-xxxx'.replace(/x/g, () => Math.floor(Math.random() * 16).toString(16));
+}{"_id":"4aee0b4c6a44d5cf0029d53b3649977d","date":"2026-07-02","start":"15:00","end":"16:00","room":"三楼东会议室","person":"纪检","topic":"书记讲授党课","status":"confirmed"},{"_id":"f0e7953e6a4b6457008951566fa2aee6","date":"2026-07-07","start":"09:00","end":"11:00","room":"三楼东会议室","person":"余亚军","topic":"储气库遗留问题讨论会","status":"confirmed"},{"_id":"38fda8636a4b6457005b2c5d034969b7","date":"2026-07-09","start":"09:00","end":"11:00","room":"三楼东会议室","person":"刘琰","topic":"","status":"confirmed"},{"_id":"d666a8c26a5494f5006b36d40b6f308b","date":"2026-07-14","start":"15:30","end":"16:30","room":"三楼东会议室","person":"综 合办","topic":"欢送会","status":"confirmed"},{"_id":"b10ac0526a4281d60009c870048b00ab","date":"2026-06-30","start":"15:00","end":"16:00","room":"二楼中会议室","person":"厂领导","topic":"油气和田新能源板块安全生产专题视频会","status":"confirmed"},{"_id":"4e2973cc6a2fa6f3003ed5a316647320","date":"2026-06-15","start":"15:00","end":"16:00","room":"三楼中会议室","person":"纪检监督室","topic":"迎接油田政治监督检查","status":"confirmed"}];
 let isAuthenticated = false;
 let currentFilter = 'all';
 const STORAGE_KEY = 'meetingSystemData';
@@ -751,8 +758,20 @@ async function cloudLoad() {
             cloudRequest('list', 'MeetingRecords'),
             cloudRequest('list', 'BookingRecords')
         ]);
-        meetingRecords = results[0] || [];
-        bookingRecords = results[1] || []
+        // 合并云端数据：云端有新记录则同步到本地
+        const cloudMeeting = results[0] || [];
+        const cloudBooking = results[1] || [];
+        // 以UUID为Key，云端有本地没有的保留，云端没有本地有的保留
+        const localMeetingMap = {};
+        meetingRecords.forEach(r => { if (r._id) localMeetingMap[r._id] = r; });
+        const localBookingMap = {};
+        bookingRecords.forEach(r => { if (r._id) localBookingMap[r._id] = r; });
+        // 保留云端记录中本地没有的
+        cloudMeeting.forEach(r => { if (r._id && !localMeetingMap[r._id]) meetingRecords.push(r); });
+        cloudBooking.forEach(r => { if (r._id && !localBookingMap[r._id]) bookingRecords.push(r); });
+        // 从删除追踪中清理已在云端不存在的
+        deletedMeetingRecords = deletedMeetingRecords.filter(id => cloudMeeting.some(r => r._id === id));
+        deletedBookingRecords = deletedBookingRecords.filter(id => cloudBooking.some(r => r._id === id));
         saveToLocalStorage();
         setCloudStatus('synced');
         showToast('✅ 云端数据加载成功！');
@@ -765,11 +784,43 @@ async function cloudLoad() {
 }
 
 async function cloudSave() {
+    // 🛡 空数据保护：本地为空且无删除记录时，跳过云端保存（防止误清云端）
+    const hasMeeting = meetingRecords.length > 0 || deletedMeetingRecords.length > 0;
+    const hasBooking = bookingRecords.length > 0 || deletedBookingRecords.length > 0;
+    if (!hasMeeting && !hasBooking) {
+        showToast('⚠️ 无变化，跳过云端同步');
+        return;
+    }
     setCloudStatus('syncing');
     try {
-        await cloudRequest('replaceAll', 'MeetingRecords', meetingRecords);
-        await cloudRequest('replaceAll', 'BookingRecords', bookingRecords);
-setCloudStatus('synced');
+        // 🔒 合并不是清空：先拉云端数据，合并后再一起替换
+        const [cloudMeeting, cloudBooking] = await Promise.all([
+            cloudRequest('list', 'MeetingRecords'),
+            cloudRequest('list', 'BookingRecords')
+        ]);
+        // 构建UUID集合
+        const localMeetingIds = new Set(meetingRecords.map(r => r._id).filter(Boolean));
+        const localBookingIds = new Set(bookingRecords.map(r => r._id).filter(Boolean));
+        // 保留云端有、本地没有且未标记删除的记录（跨设备保护）
+        const mergedMeeting = [...meetingRecords];
+        const mergedBooking = [...bookingRecords];
+        (cloudMeeting || []).forEach(r => {
+            if (r._id && !localMeetingIds.has(r._id) && !deletedMeetingRecords.includes(r._id)) {
+                mergedMeeting.push(r);
+            }
+        });
+        (cloudBooking || []).forEach(r => {
+            if (r._id && !localBookingIds.has(r._id) && !deletedBookingRecords.includes(r._id)) {
+                mergedBooking.push(r);
+            }
+        });
+        await cloudRequest('replaceAll', 'MeetingRecords', mergedMeeting);
+        await cloudRequest('replaceAll', 'BookingRecords', mergedBooking);
+        // 同步完成后清空删除追踪（这些记录已在云端删除）
+        deletedMeetingRecords = [];
+        deletedBookingRecords = [];
+        saveToLocalStorage();
+        setCloudStatus('synced');
         showToast('✅ 数据已同步到云端！');
         return true;
     } catch(e) {
@@ -806,7 +857,7 @@ function setCloudStatus(s) {
 
 // ==================== 本地存储 ====================
 function saveToLocalStorage() {
-    const data = { meetingRecords, bookingRecords };
+    const data = { meetingRecords, bookingRecords, deletedMeetingRecords, deletedBookingRecords };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) { console.error('保存失败:', e); }
 }
 
@@ -823,6 +874,8 @@ function loadFromStorage() {
             const data = JSON.parse(saved);
             meetingRecords = data.meetingRecords || [];
             bookingRecords = data.bookingRecords || [];
+            deletedMeetingRecords = data.deletedMeetingRecords || [];
+            deletedBookingRecords = data.deletedBookingRecords || [];
         }
     } catch(e) { console.error('加载失败:', e); }
 }
@@ -917,7 +970,8 @@ function addMeetingRecord() {
     const inRooms = ['三楼会议室','四楼会议室','五楼会议室','一楼会议室','三楼接待室'];
     const isInFactory = inRooms.indexOf(location) >= 0;
     const now = new Date().toLocaleString('zh-CN');
-    meetingRecords.unshift({ date, time, name, location, leaders: checked, remark });
+    meetingRecords.unshift({ _id: editingRecordUUID || generateUUID(), date, time, name, location, leaders: checked, remark });
+    editingRecordUUID = null;  // 重置编辑UUID
     saveToStorage();
     renderMeetingRecords();
     showToast('✅ 会议记录已添加！');
@@ -950,6 +1004,7 @@ function editMeetingRecord(idx) {
         c.checked = r.leaders && r.leaders.includes(c.value);
     });
     // 删除原记录（保存时会新增）
+    editingRecordUUID = r._id || generateUUID();  // 记录原UUID，编辑后复用
     meetingRecords.splice(idx, 1);
     saveToStorage(); renderMeetingRecords();
     showToast('✅ 已加载会议记录到表单，修改后点击"添加会议记录"保存！');
@@ -957,7 +1012,14 @@ function editMeetingRecord(idx) {
 
 function deleteMeetingRecord(idx) {
     if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
-    if (confirm('确定要删除这条会议记录吗？')) { meetingRecords.splice(idx, 1); saveToStorage(); renderMeetingRecords(); showToast('✅ 已删除'); }
+    if (confirm('确定要删除这条会议记录吗？')) {
+        const rec = meetingRecords[idx];
+        if (rec._id) deletedMeetingRecords.push(rec._id);  // 标记已删除，防止跨设备覆盖恢复
+        meetingRecords.splice(idx, 1);
+        saveToStorage();
+        renderMeetingRecords();
+        showToast('✅ 已删除');
+    }
 }
 
 function renderMeetingRecords() {
@@ -1088,14 +1150,23 @@ function addBooking() {
     // 冲突检测：检查同一日期同一会议室是否有时间重叠
     const conflict = bookingRecords.some(b => b.date === date && b.room === room && !(end <= b.start || start >= b.end));
     if (conflict) { showToast('⚠️ 会议时间冲突！该会议室在指定时间段已有其他预定，请调整时间或选择其他会议室。'); return; }
-    bookingRecords.unshift({ date, start, end, room, person, topic, status: 'confirmed' });
+    bookingRecords.unshift({ _id: generateUUID(), date, start, end, room, person, topic, status: 'confirmed' });
     saveToStorage(); renderBookingRecords(); renderRoomStatus(); showToast('✅ 会议室预定成功！');
     document.getElementById('bookingPerson').value = ''; document.getElementById('bookingTopic').value = '';
 }
 
 function deleteBooking(idx) {
     if (!isAuthenticated) { showToast('⚠️ 请先解锁编辑！'); return; }
-    if (confirm('确定要删除这条预定吗？')) { bookingRecords.splice(idx, 1); saveToStorage(); renderBookingRecords(); renderRoomStatus(); renderRoomStatusDisplay(); showToast('✅ 已删除'); }
+    if (confirm('确定要删除这条预定吗？')) {
+        const rec = bookingRecords[idx];
+        if (rec._id) deletedBookingRecords.push(rec._id);
+        bookingRecords.splice(idx, 1);
+        saveToStorage();
+        renderBookingRecords();
+        renderRoomStatus();
+        renderRoomStatusDisplay();
+        showToast('✅ 已删除');
+    }
 }
 
 function renderBookingRecords() {
