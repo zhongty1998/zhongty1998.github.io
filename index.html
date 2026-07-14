@@ -735,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ==================== 全局变量 ====================
 const leaders = ['张 威', '郑志强', '李晓东', '司开国', '杨洪源', '张延永', '谢 敏', '刘钧海', '吕 军', '娄永昌'];
 let meetingRecords = [];
-let bookingRecords = [];
+let bookingRecords = [{"_id":"4aee0b4c6a44d5cf0029d53b3649977d","date":"2026-07-02","start":"15:00","end":"16:00","room":"三楼东会议室","person":"纪检","topic":"书记讲授党课","status":"confirmed"},{"_id":"f0e7953e6a4b6457008951566fa2aee6","date":"2026-07-07","start":"09:00","end":"11:00","room":"三楼东会议室","person":"余亚军","topic":"储气库遗留问题讨论会","status":"confirmed"},{"_id":"38fda8636a4b6457005b2c5d034969b7","date":"2026-07-09","start":"09:00","end":"11:00","room":"三楼东会议室","person":"刘琰","topic":"","status":"confirmed"},{"_id":"d666a8c26a5494f5006b36d40b6f308b","date":"2026-07-14","start":"15:30","end":"16:30","room":"三楼东会议室","person":"综 合办","topic":"欢送会","status":"confirmed"},{"_id":"b10ac0526a4281d60009c870048b00ab","date":"2026-06-30","start":"15:00","end":"16:00","room":"二楼中会议室","person":"厂领导","topic":"油气和田新能源板块安全生产专题视频会","status":"confirmed"},{"_id":"4e2973cc6a2fa6f3003ed5a316647320","date":"2026-06-15","start":"15:00","end":"16:00","room":"三楼中会议室","person":"纪检监督室","topic":"迎接油田政治监督检查","status":"confirmed"}];
 let isAuthenticated = false;
 let currentFilter = 'all';
 const STORAGE_KEY = 'meetingSystemData';
@@ -867,6 +867,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         container.appendChild(div);
     });
     loadFromStorage();
+    // 若localStorage为空（首次），先把预装数据写入，避免被空覆盖
+    if (!localStorage.getItem(STORAGE_KEY)) {
+        saveToLocalStorage();
+    }
     renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
     await cloudLoad();
     renderMeetingRecords(); renderBookingRecords(); renderRoomStatus();
