@@ -623,6 +623,7 @@
         }
         .splash-overlay.fade-out {
             opacity: 0;
+            pointer-events: none;
         }
         .splash-icon {
             font-size: 80px;
@@ -696,7 +697,7 @@
         <p>请输入密码以继续</p>
         <div class="pw-input-group">
             <input type="password" id="pwInput" placeholder="输入密码" autofocus onkeydown="if(event.key==='Enter')checkGatePassword()">
-            <button id="pwEnterBtn">进入</button>
+            <button id="pwEnterBtn" onclick="checkGatePassword()">进入</button>
         </div>
         <div id="pwError" class="pw-error">密码错误，请重试</div>
     </div>
@@ -917,7 +918,7 @@ function checkGatePassword() {
     }
 }
 
-// 回车键提交 + 按钮点击双重保险
+// 三重保险：inline onclick + 回车键 + addEventListener
 document.addEventListener('DOMContentLoaded', function() {
     var btn = document.getElementById('pwEnterBtn');
     var input = document.getElementById('pwInput');
