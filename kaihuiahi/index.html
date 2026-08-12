@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开个会 | 沉浸式会务操作指南</title>
+    <style>
+        :root {
+            --dark-bg: #0f172a;
+            --light-bg: #f8fafc;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --text-white: #ffffff;
+            --text-dark: #1e293b;
+            --text-gray: #94a3b8;
+            --nav-height: 72px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-white);
+            overflow-x: hidden;
+        }
+
+        /* ===== 液态玻璃导航栏（全宽·左对齐） ===== */
+        .dot-nav {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height);
+            display: flex; align-items: center; justify-content: flex-start; gap: 0.4rem;
+            z-index: 100;
+            padding: 0 2.5rem;
+            /* 液态玻璃核心 */
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow:
+                0 4px 24px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+
+        /* Logo 玻璃拟态 */
+        .nav-logo {
+            display: flex; align-items: center; gap: 0.65rem;
+            text-decoration: none; margin-right: 1.8rem;
+            padding: 0.4rem 0.9rem 0.4rem 0.5rem; border-radius: 14px;
+            transition: transform 0.45s cubic-bezier(0.34, 1.9, 0.5, 1), background 0.3s ease;
+        }
+        .nav-logo:hover { transform: scale(1.08) translateY(-1px); background: rgba(255,255,255,0.06); }
+        .logo-icon {
+            width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+            /* 玻璃质感图标 */
+            background: linear-gradient(135deg, rgba(96,165,250,0.9), rgba(59,130,246,0.7));
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow:
+                0 4px 12px rgba(59,130,246,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.45),
+                inset 0 -1px 0 rgba(0,0,0,0.1);
+        }
+        .logo-text {
+            font-size: 1.2rem; font-weight: 800; letter-spacing: -0.03em;
+            color: var(--text-white);
+            text-shadow: 0 1px 8px rgba(59,130,246,0.3);
+        }
+
+        /* 导航项 */
+        .nav-item {
+            position: relative;
+            display: flex; align-items: center; gap: 0.55rem;
+            color: rgba(255,255,255,0.68); text-decoration: none;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            padding: 0.55rem 1.1rem; border-radius: 14px;
+            transition: transform 0.45s cubic-bezier(0.34, 1.9, 0.5, 1), color 0.3s ease, background 0.3s ease;
+        }
+        .nav-item:hover {
+            transform: scale(1.14) translateY(-2px);
+            color: var(--text-white);
+            background: rgba(255,255,255,0.08);
+        }
+        .nav-item:active { transform: scale(1.04); }
+        .nav-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: rgba(255,255,255,0.35);
+            transition: all 0.3s ease; flex-shrink: 0;
+        }
+        .nav-item:hover .nav-dot, .nav-item.active .nav-dot {
+            background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+            transform: scale(1.25);
+        }
+        .nav-item.active { color: var(--text-white); }
+        /* 点击横线 */
+        .nav-item::after {
+            content: ''; position: absolute; bottom: 3px; left: 26%; right: 26%; height: 3px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #60a5fa, #93c5fd);
+            box-shadow: 0 0 8px rgba(96,165,250,0.8);
+            transform: scaleX(0); transform-origin: center;
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .nav-item.active::after { transform: scaleX(1); }
+
+        /* ===== Hero 大图轮播 ===== */
+        .hero { position: relative; height: 100vh; overflow: hidden; }
+        .hero-slide {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+            transition: opacity 1.4s ease;
+        }
+        .hero-slide.active { opacity: 1; z-index: 2; }
+        .hero-slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.05); }
+        .hero-slide.active img { animation: kenburns 9s ease-out forwards; }
+        @keyframes kenburns {
+            from { transform: scale(1.05) translate(0, 0); }
+            to   { transform: scale(1.2) translate(-1.6%, 1.2%); }
+        }
+        .hero-slide::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.05) 40%, rgba(15,23,42,0.72) 100%);
+        }
+        .slide-caption {
+            position: absolute; left: 5rem; bottom: 16%; z-index: 3; max-width: 500px;
+            background: rgba(15, 23, 42, 0.42);
+            backdrop-filter: blur(22px) saturate(160%);
+            -webkit-backdrop-filter: blur(22px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 26px; padding: 2.2rem 2.6rem;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+            color: white;
+            opacity: 0; transform: translateY(36px);
+            transition: all 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.4s;
+        }
+        .hero-slide.active .slide-caption { opacity: 1; transform: translateY(0); }
+        .slide-tag {
+            display: inline-block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa); padding: 0.3rem 0.9rem;
+            border-radius: 50px; margin-bottom: 1rem; box-shadow: 0 2px 10px rgba(59,130,246,0.4);
+        }
+        .slide-caption h2 { font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.6rem; }
+        .slide-caption p { font-size: 1rem; color: rgba(255,255,255,0.72); line-height: 1.6; margin-bottom: 1.2rem; }
+        .slide-cta {
+            display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.92rem; font-weight: 700; color: #93c5fd;
+            transition: transform 0.3s ease;
+        }
+        .hero-slide:hover .slide-cta { transform: translateX(6px); }
+        .hero-slide:hover .slide-caption { border-color: rgba(147,197,253,0.4); }
+
+        /* Hero 居中艺术标题 */
+        .hero-center-title {
+            position: absolute; z-index: 6; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(3rem, 6vw, 5rem); font-weight: 900;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.92);
+            text-shadow:
+                0 0 30px rgba(255,255,255,0.2),
+                0 0 60px rgba(59,130,246,0.3),
+                0 2px 4px rgba(0,0,0,0.15);
+            pointer-events: auto; user-select: none;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hero-center-title:hover {
+            transform: translate(-50%, -50%) scale(1.08);
+            color: rgba(255,255,255,1);
+            text-shadow:
+                0 0 40px rgba(255,255,255,0.35),
+                0 0 80px rgba(59,130,246,0.5),
+                0 0 120px rgba(168,85,247,0.35),
+                0 3px 6px rgba(0,0,0,0.2);
+            letter-spacing: 0.18em;
+        }
+
+        .hero-dots {
+            position: absolute; bottom: 2.2rem; left: 50%; transform: translateX(-50%);
+            z-index: 5; display: flex; gap: 0.6rem;
+            padding: 0.55rem 0.9rem; border-radius: 50px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.14);
+        }
+        .hero-dot {
+            width: 8px; height: 8px; border-radius: 5px; cursor: pointer;
+            background: rgba(255,255,255,0.35);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hero-dot:hover { background: rgba(255,255,255,0.7); transform: scale(1.2); }
+        .hero-dot.active { width: 26px; background: var(--accent-blue); box-shadow: 0 0 10px rgba(59,130,246,0.7); }
+
+        /* ===== 模块通用 ===== */
+        .module-section {
+            background: var(--light-bg); color: var(--text-dark); min-height: 100vh;
+            padding: calc(var(--nav-height) + 3rem) 2rem 6rem; display: none;
+        }
+        .module-section.active { display: block; animation: fadeIn 0.5s ease-out; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h2.section-title { font-size: 2.5rem; margin-bottom: 1rem; letter-spacing: -0.02em; position: relative; padding-left: 1.5rem; }
+        h2.section-title::before { content:''; position: absolute; left: 0; top: 0.5rem; width: 6px; height: 2.5rem; background: var(--accent-blue); border-radius: 3px; }
+        .module-desc { color: #64748b; font-size: 1.05rem; margin-bottom: 3rem; padding-left: 1.5rem; }
+
+        /* ===== 会议准备卡片 ===== */
+        .guide-card {
+            background: white; border-radius: 16px; padding: 2.5rem; margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); opacity: 0; transform: translateY(40px); transition: all 0.6s ease;
+        }
+        .guide-card.visible { opacity: 1; transform: translateY(0); }
+        .card-title { font-size: 1.5rem; margin-bottom: 1.2rem; color: var(--text-dark); }
+        .checklist-item { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; font-size: 1.05rem; line-height: 1.6; }
+        .check-icon {
+            width: 24px; height: 24px; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px; color: var(--accent-blue); font-weight: bold; font-size: 0.8rem;
+        }
+        .tip-box {
+            background: #fffbeb; border-left: 4px solid #f59e0b; padding: 1.5rem; border-radius: 0 12px 12px 0;
+            margin-top: 1.5rem; font-size: 0.95rem; color: #92400e;
+        }
+        .flash { animation: flashGlow 0.9s ease 2; }
+        @keyframes flashGlow {
+            0%, 100% { box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+            50% { box-shadow: 0 0 0 4px rgba(59,130,246,0.55), 0 8px 36px rgba(59,130,246,0.35); }
+        }
+
+        /* ===== 游戏闯关模块 ===== */
+        .quest-header {
+            text-align: center; margin-bottom: 3rem; padding: 2rem; background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 20px; color: white; position: relative; overflow: hidden;
+        }
+        .quest-header::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%);
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+        @keyframes pulse-glow { 0%,100%{transform:scale(1);opacity:0.5;} 50%{transform:scale(1.1);opacity:1;} }
+        .quest-header h3 { font-size: 1.8rem; margin-bottom: 0.5rem; position: relative; }
+        .quest-header p { color: #94a3b8; position: relative; }
+        .overall-progress { margin-top: 1.5rem; position: relative; }
+        .overall-progress-bar { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; }
+        .overall-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); border-radius: 6px; transition: width 0.6s ease; width: 0%; }
+        .overall-progress-text { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; }
+
+        .level-card {
+            background: white; border-radius: 20px; margin-bottom: 2rem; overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06); transition: all 0.4s ease;
+            border: 2px solid transparent;
+        }
+        .level-card.locked { opacity: 0.5; pointer-events: none; filter: grayscale(0.5); }
+        .level-card.completed { border-color: var(--accent-green); }
+        .level-card.current { border-color: var(--accent-blue); box-shadow: 0 4px 24px rgba(59,130,246,0.15); }
+        .level-header {
+            padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1rem; cursor: pointer;
+            user-select: none; transition: background 0.3s;
+        }
+        .level-header:hover { background: #f1f5f9; }
+        .level-badge {
+            width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0; color: white; font-weight: 700;
+        }
+        .level-badge.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .level-badge.yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .level-badge.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .level-badge.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .level-badge.purple { background: linear-gradient(135deg, #a855f7, #9333ea); }
+        .level-badge.orange { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .level-info { flex: 1; }
+        .level-name { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); }
+        .level-subtitle { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+        .level-status { font-size: 0.8rem; padding: 0.3rem 0.8rem; border-radius: 50px; font-weight: 600; }
+        .level-status.locked-status { background: #f1f5f9; color: #94a3b8; }
+        .level-status.active-status { background: #dbeafe; color: #2563eb; }
+        .level-status.done-status { background: #dcfce7; color: #16a34a; }
+        .level-toggle { font-size: 1.2rem; color: #94a3b8; transition: transform 0.3s; }
+        .level-card.open .level-toggle { transform: rotate(180deg); }
+        .level-body { max-height: 0; overflow: hidden; transition: max-height 0.5s ease; }
+        .level-card.open .level-body { max-height: 3000px; }
+        .level-body-inner { padding: 0 2rem 2rem; }
+        .level-progress-bar { width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; margin-bottom: 1.5rem; }
+        .level-progress-fill { height: 100%; background: var(--accent-blue); border-radius: 3px; transition: width 0.4s ease; width: 0%; }
+
+        .task-item {
+            display: flex; align-items: flex-start; gap: 0.8rem; padding: 1rem; margin-bottom: 0.8rem;
+            background: #f8fafc; border-radius: 12px; cursor: pointer; transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+        .task-item:hover { background: #eff6ff; border-color: #bfdbfe; }
+        .task-item.done { background: #f0fdf4; border-color: #bbf7d0; }
+        .task-item.done .task-text { text-decoration: line-through; color: #64748b; }
+        .task-checkbox {
+            width: 22px; height: 22px; border: 2px solid #cbd5e1; border-radius: 6px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s; margin-top: 2px;
+        }
+        .task-item.done .task-checkbox { background: var(--accent-green); border-color: var(--accent-green); }
+        .task-checkbox::after { content: '✓'; color: white; font-size: 0.75rem; font-weight: 700; opacity: 0; transition: opacity 0.2s; }
+        .task-item.done .task-checkbox::after { opacity: 1; }
+        .task-text { font-size: 0.95rem; line-height: 1.5; color: var(--text-dark); }
+        .task-text strong { color: var(--accent-blue); }
+        .task-standard { font-size: 0.82rem; color: #64748b; margin-top: 4px; font-style: italic; }
+        .warning-box {
+            background: #fef2f2; border-left: 4px solid var(--accent-red); padding: 1rem 1.2rem;
+            border-radius: 0 10px 10px 0; margin-top: 1rem; font-size: 0.88rem; color: #991b1b;
+        }
+        .warning-box strong { color: var(--accent-red); }
+        .boss-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.88rem; }
+        .boss-table th { background: #1e293b; color: white; padding: 0.7rem 1rem; text-align: left; }
+        .boss-table td { padding: 0.7rem 1rem; border-bottom: 1px solid #e2e8f0; }
+        .boss-table tr:hover td { background: #f1f5f9; }
+        .reward-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 1.2rem;
+            margin-top: 1rem; display: flex; align-items: center; gap: 0.8rem; font-size: 0.9rem; color: #92400e;
+        }
+
+        /* ===== 资源下载 ===== */
+        .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 1.5rem; }
+        .download-card {
+            background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease; cursor: pointer; border: 1px solid transparent;
+        }
+        .download-card:hover { transform: translateY(-4px); border-color: var(--accent-blue); box-shadow: 0 8px 30px rgba(59,130,246,0.15); }
+        .dl-icon { font-size: 2rem; margin-bottom: 1rem; }
+        .dl-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .dl-desc { font-size: 0.9rem; color: #64748b; }
+        .download-card.pending { opacity: 0.6; cursor: not-allowed; }
+
+        @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+        @keyframes confetti-fall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1;} 100%{transform:translateY(60px) rotate(360deg);opacity:0;} }
+        .confetti { position: absolute; width: 8px; height: 8px; border-radius: 2px; animation: confetti-fall 1s ease-out forwards; pointer-events: none; }
+
+        @media (max-width:768px) {
+            .dot-nav { padding: 0 1.2rem; height: 60px; }
+            .nav-logo { margin-right: 0.8rem; padding: 0.3rem 0.6rem 0.3rem 0.4rem; }
+            .logo-icon { width: 30px; height: 30px; font-size: 0.95rem; }
+            .logo-text { font-size: 1rem; }
+            .nav-item { font-size: 0.8rem; padding: 0.45rem 0.7rem; gap: 0.35rem; }
+            .slide-caption { left: 1.2rem; right: 1.2rem; bottom: 18%; padding: 1.5rem 1.6rem; }
+            .module-section { padding: calc(var(--nav-height) + 1.5rem) 1.5rem 4rem; }
+            h2.section-title { font-size: 1.8rem; }
+            .guide-card { padding: 1.5rem; }
+            .level-header { padding: 1.2rem 1.5rem; }
+            .level-body-inner { padding: 0 1.5rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== 液态玻璃导航（全宽·左对齐） ===== -->
+<nav class="dot-nav">
+    <a href="#" class="nav-logo">
+        <div class="logo-icon">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#f97316"/>
+                        <stop offset="50%" stop-color="#f59e0b"/>
+                        <stop offset="100%" stop-color="#fbbf24"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="13" cy="13" r="12" fill="url(#logoGrad)" stroke="white" stroke-width="1.5" stroke-opacity="0.35"/>
+                <path d="M8 10.5 Q8 8 11 8 L15 8 Q18 8 18 10.5 L18 13.5 Q18 16 15 16 L13.5 16 L10.5 19 L11.2 16 L11 16 Q8 16 8 13.5 Z" fill="white" fill-opacity="0.95"/>
+                <circle cx="11.5" cy="12" r="1" fill="#f97316"/>
+                <circle cx="14.5" cy="12" r="1" fill="#f59e0b"/>
+                <circle cx="13" cy="15.2" r="0.9" fill="#fbbf24"/>
+            </svg>
+        </div>
+        <span class="logo-text">开个会</span>
+    </a>
+    <a class="nav-item" data-target="prep"><span>会议筹备</span></a>
+    <a class="nav-item" data-target="flow"><span>会议流程</span></a>
+    <a class="nav-item" data-target="resources"><span>资源支持</span></a>
+</nav>
+
+<!-- ===== Hero 大图轮播 ===== -->
+<section class="hero" id="hero">
+    <div class="hero-center-title">开个会</div>
+    <div class="hero-slide active" data-module="prep" data-target="prep-card-1">
+        <img src="https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=2560&auto=format&fit=crop" alt="会议筹备">
+    </div>
+    <div class="hero-slide" data-module="flow" data-target="flow-card-1">
+        <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2560&auto=format&fit=crop" alt="会前踩点">
+    </div>
+    <div class="hero-slide" data-module="prep" data-target="prep-card-4">
+        <img src="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?q=80&w=2560&auto=format&fit=crop" alt="会场设备">
+    </div>
+    <div class="hero-slide" data-module="resources" data-target="resources-grid">
+        <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2560&auto=format&fit=crop" alt="文档模板">
+    </div>
+    <div class="hero-dots">
+        <span class="hero-dot active" data-index="0"></span>
+        <span class="hero-dot" data-index="1"></span>
+        <span class="hero-dot" data-index="2"></span>
+        <span class="hero-dot" data-index="3"></span>
+    </div>
+</section>
+
+<!-- ===== 模块1：会议筹备 ===== -->
+<section id="prep" class="module-section">
+    <div class="container">
+        <h2 class="section-title">会议筹备指南</h2>
+        <p class="module-desc">12项关键动作，按业务属性归为4大板块。新人友好，跟着走就对了。</p>
+
+        <!-- 一、通知与联络 -->
+        <div class="guide-card" id="prep-card-1">
+            <h3 class="card-title">一、通知与联络 · 开会前，先摇人</h3>
+            <div class="checklist-item"><div class="check-icon">1</div><span><strong>起草会议通知：</strong>写清楚会议名称、要干嘛、啥时候报到、在哪开、怎么报名、找谁联系。</span></div>
+            <div class="tip-box">💡 <strong>温馨提醒：</strong>时间别玩"盲盒"——千万别写"明天"或"后天"，一定要写具体的"X月X日 X:00"，新人最容易在这里翻车！地点要"精准导航"——别只写公司大楼，精确到"X楼X号会议室"。</div>
+            <div class="checklist-item"><div class="check-icon">2</div><span><strong>下发会议通知：</strong>可打电话、发短信/微信、发邮件或发书面通知。涉密会议绝对不能发微信或短信。发了不代表别人看了——邮件开"已读回执"，微信/短信叮嘱"收到请回复"，纸质通知搞个签收表。</span></div>
+            <div class="checklist-item"><div class="check-icon">3</div><span><strong>落实参会人员：</strong>汇总请假名单，必要时打电话核实原因。反复核对后打印纸质版请假名单，提前交给领导或主持人。</span></div>
+            <div class="checklist-item"><div class="check-icon">4</div><span><strong>协调出席领导：</strong>当面、打电话或发信息邀请，讲清时间/地点/谁参加/大概流程。会前1小时再提醒一次，防止领导忘记。</span></div>
+        </div>
+
+        <!-- 二、会务与后勤 -->
+        <div class="guide-card" id="prep-card-2">
+            <h3 class="card-title">二、会务与后勤 · 兵马未动，粮草先行</h3>
+            <div class="checklist-item"><div class="check-icon">5</div><span><strong>预订会议室：</strong>时间敲定后马上找后勤订会议室，顺便请他们打扫卫生、摆好桌椅。有外来客人时，提前在楼下或电梯口做引导牌。</span></div>
+            <div class="checklist-item"><div class="check-icon">6</div><span><strong>编印会议须知：</strong>大型会议必备——把会议纪律、日程表、食宿安排、紧急联系电话、工作人员名单都印在里面。文字简短清晰，排版让人一眼找到重点。</span></div>
+            <div class="checklist-item"><div class="check-icon">7</div><span><strong>制作会议证件：</strong>代表证/工作证/车辆通行证等。设计美观大方但控制成本，字要大、颜色醒目，方便识别和安保管理。</span></div>
+            <div class="checklist-item"><div class="check-icon">8</div><span><strong>组织调度会议用车：</strong>租车或借车安排专人盯着。上车前一定要"点名"！车多时编号分组，调度才不会乱。</span></div>
+        </div>
+
+        <!-- 三、场地与物料 -->
+        <div class="guide-card" id="prep-card-3">
+            <h3 class="card-title">三、场地与物料 · 会场布置，细节拉满</h3>
+            <div class="checklist-item"><div class="check-icon">9</div><span><strong>会场布置：</strong>重点布置主席台；提前测试音响、话筒、投影和灯光。话筒挨个试音，开场音乐/视频提前播放一遍并备好备用文件。确认摄像机、话筒电池有电。</span></div>
+            <div class="checklist-item"><div class="check-icon">10</div><span><strong>制作与摆放桌签：</strong>按名单制作，按礼仪规范摆放。摆放前务必核对三遍名字，错别字是"大忌"。摆好后画座位图打印放在会场门口。</span></div>
+            <div class="checklist-item"><div class="check-icon">11</div><span><strong>分发会议材料：</strong>材料登记防漏发，领导桌上材料从头到尾翻一遍查顺序和漏页。机密文件登记编号，会后必须收回。</span></div>
+        </div>
+
+        <!-- 四、宣传与材料 -->
+        <div class="guide-card" id="prep-card-4">
+            <h3 class="card-title">四、宣传与材料 · 记录与分发，有始有终</h3>
+            <div class="checklist-item"><div class="check-icon">12</div><span><strong>安排新闻报道：</strong>提前联系宣传部门或记者，会场给他们留好专门座位，沟通好需要拍哪些重点画面。</span></div>
+            <div class="tip-box">🤝 <strong>千万别一个人硬扛！</strong>拉一个"会务筹备群"，把分工表发群里，每天同步进度。<br><br>
+            <strong>统筹：</strong>总控进度、协调领导、把控全局。<br>
+            <strong>联络能手：</strong>起草下发通知、落实参会名单、对接新闻报道。<br>
+            <strong>后勤总管：</strong>预订会议室、安排车辆、编印须知和制作证件。<br>
+            <strong>现场执行：</strong>会场布置、摆放桌签、分发核对会议材料。</div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== 模块2：会议流程 ===== -->
+<section id="flow" class="module-section">
+    <div class="container">
+        <h2 class="section-title">会议流程指南</h2>
+        <p class="module-desc">从会前踩点到会后收尾，四步搞定会议现场执行。逐条勾选任务，解锁下一步。</p>
+
+        <div class="quest-header">
+            <h3>流程进度追踪</h3>
+            <p>完成每一阶段的全部任务后，自动解锁下一阶段</p>
+            <div class="overall-progress">
+                <div class="overall-progress-bar"><div class="overall-progress-fill" id="overallProgressFill"></div></div>
+                <div class="overall-progress-text" id="overallProgressText">已完成 0 / 8 项任务</div>
+            </div>
+        </div>
+
+        <div class="level-card open current" id="flow-card-1">
+            <div class="level-header" onclick="toggleLevel(this)">
+                <div class="level-badge blue">1</div>
+                <div class="level-info">
+                    <div class="level-name">提前踩点与最终确认</div>
+                    <div class="level-subtitle">会议开始前 1~2 小时</div>
+                </div>
+                <span class="level-status active-status">进行中</span>
+                <span class="level-toggle">▼</span>
+            </div>
+            <div class="level-body">
+                <div class="level-body-inner">
+                    <div class="level-progress-bar"><div class="level-progress-fill" id="lp1"></div></div>
+                    <div class="task-item" onclick="toggleTask(this,1)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>做什么：</strong>开会前1-2小时，去现场做最后的"彩排"。</div>
+                    </div>
+                    <div class="task-item" onclick="toggleTask(this,1)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>具体怎么做：</strong>确认设备（话筒、PPT、视频）都能正常播放；确认空调温度是否合适；确认茶水、纸笔是否摆放整齐。</div>
+                    </div>
+                    <div class="tip-box">💡 <strong>温馨提醒：</strong>提前准备好一个"应急百宝箱"（里面放几支备用签字笔、备用电池、创可贴、纸巾等），现场遇到小状况随时能救急。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="level-card locked" id="flow-card-2">
+            <div class="level-header" onclick="toggleLevel(this)">
+                <div class="level-badge green">2</div>
+                <div class="level-info">
+                    <div class="level-name">签到与引导</div>
+                    <div class="level-subtitle">参会人员入场阶段</div>
+                </div>
+                <span class="level-status locked-status">待解锁</span>
+                <span class="level-toggle">▼</span>
+            </div>
+            <div class="level-body">
+                <div class="level-body-inner">
+                    <div class="level-progress-bar"><div class="level-progress-fill" id="lp2"></div></div>
+                    <div class="task-item" onclick="toggleTask(this,2)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>做什么：</strong>让参会者顺利入场并找到座位。</div>
+                    </div>
+                    <div class="task-item" onclick="toggleTask(this,2)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>具体怎么做：</strong>安排专人在门口负责签到、发材料；安排引导员在会场内帮忙指路。</div>
+                    </div>
+                    <div class="tip-box">💡 <strong>小白避坑指南：</strong>签到区千万别排长队！如果人多，可以准备2-3个签到点</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="level-card locked" id="flow-card-3">
+            <div class="level-header" onclick="toggleLevel(this)">
+                <div class="level-badge orange">3</div>
+                <div class="level-info">
+                    <div class="level-name">控场与进度跟进</div>
+                    <div class="level-subtitle">会议进行中</div>
+                </div>
+                <span class="level-status locked-status">待解锁</span>
+                <span class="level-toggle">▼</span>
+            </div>
+            <div class="level-body">
+                <div class="level-body-inner">
+                    <div class="level-progress-bar"><div class="level-progress-fill" id="lp3"></div></div>
+                    <div class="task-item" onclick="toggleTask(this,3)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>做什么：</strong>确保会议按时间表进行，不严重超时。</div>
+                    </div>
+                    <div class="task-item" onclick="toggleTask(this,3)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>具体怎么做：</strong>场控人员要时刻关注时间。如果某个环节严重超时，可以通过递小纸条或发微信的方式，委婉提醒发言人。</div>
+                    </div>
+                    <div class="tip-box">💡 <strong>温馨提醒：</strong>如果领导讲话意犹未尽，千万别生硬打断！可以通过调整后续茶歇时间或压缩非核心环节来把时间"抢"回来。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="level-card locked" id="flow-card-4">
+            <div class="level-header" onclick="toggleLevel(this)">
+                <div class="level-badge purple">4</div>
+                <div class="level-info">
+                    <div class="level-name">会后清场与收尾</div>
+                    <div class="level-subtitle">会议结束后</div>
+                </div>
+                <span class="level-status locked-status">待解锁</span>
+                <span class="level-toggle">▼</span>
+            </div>
+            <div class="level-body">
+                <div class="level-body-inner">
+                    <div class="level-progress-bar"><div class="level-progress-fill" id="lp4"></div></div>
+                    <div class="task-item" onclick="toggleTask(this,4)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>做什么：</strong>会议结束后的"善后工作"。</div>
+                    </div>
+                    <div class="task-item" onclick="toggleTask(this,4)">
+                        <div class="task-checkbox"></div>
+                        <div class="task-text"><strong>具体怎么做：</strong>提醒参会者带好随身物品；回收涉密材料和会议证件；检查会场是否有遗留物品；最后跟保洁阿姨确认恢复原状。</div>
+                    </div>
+                    <div class="tip-box">💡 <strong>小白避坑指南：</strong>散场时最容易乱，一定要站在门口微笑着欢送大家，顺便提醒一句"请带好随身物品"，这会让参会者的体验感直线上升！</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== 模块3：资源下载 ===== -->
+<section id="resources" class="module-section">
+    <div class="container">
+        <h2 class="section-title">会务资源工具箱</h2>
+        <p class="module-desc">以下模板均源自24条标准实务，可直接下载套用，大幅降低筹备出错率。</p>
+        <!-- 下载项由下方 JS 的 RESOURCES 数组渲染：新增附件只需填 file 的 Cloud Storage URL -->
+        <div class="download-grid" id="resources-grid"></div>
+    </div>
+</section>
+
+<script>
+// ===== Hero 轮播 =====
+const slides = document.querySelectorAll('.hero-slide');
+const heroDots = document.querySelectorAll('.hero-dot');
+let currentSlide = 0, paused = false;
+
+function showSlide(i) {
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    heroDots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+    currentSlide = i;
+}
+function nextSlide() { showSlide((currentSlide + 1) % slides.length); }
+
+heroDots.forEach((d, i) => d.addEventListener('click', () => showSlide(i)));
+
+const heroEl = document.getElementById('hero');
+heroEl.addEventListener('mouseenter', () => paused = true);
+heroEl.addEventListener('mouseleave', () => paused = false);
+setInterval(() => { if (!paused) nextSlide(); }, 6500);
+
+// ===== 图片点击深链 =====
+slides.forEach(slide => {
+    slide.addEventListener('click', () => {
+        deepNavigate(slide.dataset.module, slide.dataset.target);
+    });
+});
+
+function deepNavigate(modId, targetId) {
+    navItems.forEach(n => n.classList.toggle('active', n.dataset.target === modId));
+    sections.forEach(sec => sec.classList.toggle('active', sec.id === modId));
+    window.scrollTo({ top: window.innerHeight - 20, behavior: 'smooth' });
+    if (!targetId) return;
+    setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el.classList.contains('level-card')) el.classList.add('open');
+        el.classList.remove('flash');
+        void el.offsetWidth;
+        el.classList.add('flash');
+        setTimeout(() => el.classList.remove('flash'), 2600);
+    }, 550);
+}
+
+// ===== 导航切换 =====
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.module-section');
+navItems.forEach(item => {
+    item.addEventListener('click', () => {
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        const target = item.dataset.target;
+        sections.forEach(sec => sec.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+        if (target === 'flow') {
+            setTimeout(() => {
+                document.getElementById(target).querySelectorAll('.level-card').forEach((c, i) => {
+                    c.classList.remove('open');
+                    setTimeout(() => c.classList.add('open'), i * 150);
+                });
+            }, 50);
+        }
+        if (target === 'prep') {
+            setTimeout(() => {
+                document.getElementById(target).querySelectorAll('.guide-card').forEach((c, i) => {
+                    c.classList.remove('visible');
+                    setTimeout(() => c.classList.add('visible'), i * 150);
+                });
+            }, 50);
+        }
+        window.scrollTo({ top: window.innerHeight - 20, behavior: 'smooth' });
+    });
+});
+
+// ===== 流程卡片展开/收起 =====
+function toggleLevel(header) {
+    const card = header.parentElement;
+    card.classList.toggle('open');
+}
+
+// ===== 任务勾选与进度追踪 =====
+function toggleTask(el, cardNum) {
+    // 先检查该卡片是否已锁定
+    const card = el.closest('.level-card');
+    if (card.classList.contains('locked')) return;
+    // 切换完成状态
+    el.classList.toggle('done');
+    updateProgress(cardNum);
+    // 如果当前卡片所有任务完成，解锁下一个
+    if (isCardComplete(cardNum)) {
+        card.classList.add('completed');
+        card.classList.remove('current');
+        const badge = card.querySelector('.level-status');
+        if (badge) { badge.className = 'level-status done-status'; badge.textContent = '已完成'; }
+        unlockNext(cardNum);
+    }
+}
+
+function isCardComplete(cardNum) {
+    const card = document.getElementById('flow-card-' + cardNum);
+    const tasks = card.querySelectorAll('.task-item');
+    return tasks.length > 0 && Array.from(tasks).every(t => t.classList.contains('done'));
+}
+
+function updateProgress(cardNum) {
+    // 更新当前卡片的内部进度条
+    const card = document.getElementById('flow-card-' + cardNum);
+    const tasks = card.querySelectorAll('.task-item');
+    const done = card.querySelectorAll('.task-item.done').length;
+    const total = tasks.length;
+    const fill = card.querySelector('.level-progress-fill');
+    if (fill) fill.style.width = (total > 0 ? (done / total * 100) : 0) + '%';
+
+    // 更新总体进度
+    const allCards = document.querySelectorAll('#flow .level-card');
+    let totalTasks = 0, doneTasks = 0;
+    allCards.forEach(c => {
+        const ts = c.querySelectorAll('.task-item');
+        totalTasks += ts.length;
+        doneTasks += c.querySelectorAll('.task-item.done').length;
+    });
+    const overallFill = document.getElementById('overallProgressFill');
+    const overallText = document.getElementById('overallProgressText');
+    if (overallFill) overallFill.style.width = (totalTasks > 0 ? (doneTasks / totalTasks * 100) : 0) + '%';
+    if (overallText) overallText.textContent = '已完成 ' + doneTasks + ' / ' + totalTasks + ' 项任务';
+
+    // 全部完成时撒花
+    if (doneTasks === totalTasks && totalTasks > 0) {
+        spawnConfetti();
+    }
+}
+
+function unlockNext(cardNum) {
+    const nextNum = cardNum + 1;
+    const nextCard = document.getElementById('flow-card-' + nextNum);
+    if (!nextCard) return;
+    nextCard.classList.remove('locked');
+    nextCard.classList.add('current');
+    const badge = nextCard.querySelector('.level-status');
+    if (badge) { badge.className = 'level-status active-status'; badge.textContent = '进行中'; }
+}
+
+function spawnConfetti() {
+    const flowEl = document.getElementById('flow');
+    if (!flowEl) return;
+    const colors = ['#f59e0b','#3b82f6','#22c55e','#ef4444','#a855f7','#f97316','#ec4899','#06b6d4'];
+    for (let i = 0; i < 60; i++) {
+        setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'confetti';
+            el.style.position = 'fixed';
+            el.style.zIndex = '9999';
+            el.style.left = Math.random() * 100 + '%';
+            el.style.top = '-20px';
+            el.style.background = colors[Math.floor(Math.random() * colors.length)];
+            el.style.animationDelay = Math.random() * 0.6 + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }, i * 25);
+    }
+
+    // 弹出祝贺弹窗
+    setTimeout(() => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.3s ease;';
+        overlay.id = 'congrats-overlay';
+        overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+        const popup = document.createElement('div');
+        popup.style.cssText = 'background:white;border-radius:24px;padding:3rem 2.5rem;text-align:center;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:fadeInUp 0.5s ease;';
+        popup.innerHTML = `
+            <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+            <h3 style="font-size:1.6rem;color:#1e293b;margin-bottom:0.8rem;">恭喜你已完成全部任务</h3>
+            <p style="font-size:1.1rem;color:#64748b;margin-bottom:1.5rem;">你已成为<strong style="color:#f59e0b;">会务能手</strong>！</p>
+            <button style="background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none;padding:0.8rem 2.5rem;border-radius:50px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.2s;"
+                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"
+                onclick="document.getElementById('congrats-overlay').remove()">知道了</button>
+        `;
+
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+    }, 800);
+}
+
+// ===== 资源下载（数据驱动，方便后续加附件） =====
+// 添加附件：把对应项的 file 填上 Cloud Storage 文件 URL 即可（留空则显示"待上传"）
+const RESOURCES = [
+  { icon:'🪑', title:'1. 座位自动排序程序', desc:'根据职级/单位/姓名拼音自动生成座次表，一键输出座区图', file:'' },
+  { icon:'📋', title:'2. 签到表模版下载', desc:'标准化签到表，含姓名/单位/职务/签到时间/备注栏', file:'files/qiandaobiao.xlsx' },
+  { icon:'📖', title:'3. 会议室使用手册', desc:'设备操作指南、容量参数、预订流程、使用规范一应俱全', file:'' },
+  { icon:'🏷️', title:'4. 台签模版', desc:'多种规格台签模版，支持批量导入姓名自动生成打印', file:'files/taiqian.doc' },
+  { icon:'🎨', title:'5. 会标模版下载', desc:'通用会议主题横幅设计模版，适配不同会场尺寸', file:'files/huibiaomuban.pptx' },
+  { icon:'📦', title:'6. 会议室物资清单', desc:'茶歇/文具/设备/应急物资分类清单，筹备采购一步到位', file:'' },
+  { icon:'🎯', title:'7. 模拟会议', desc:'沉浸式会务模拟演练，从筹备到复盘全流程实战体验', file:'' },
+  { icon:'📝', title:'8. 会议备忘录', desc:'会议纪要/决议事项/待办追踪一体化模板，会后跟进不遗漏', file:'files/huiyibeiwanglu.exe' },
+];
+function renderResources(){
+  const grid = document.getElementById('resources-grid');
+  if(!grid) return;
+  grid.innerHTML = RESOURCES.map(r => {
+    const ready = !!r.file;
+    return '<a class="download-card'+(ready?'':' pending')+'" href="'+(ready?r.file:'#')+'"'
+      + (ready?' target="_blank"':'') + ' onclick="'+(ready?'':'event.preventDefault();alert(\'该附件待上传\');')+'">'
+      + '<div class="dl-icon">'+r.icon+'</div>'
+      + '<div class="dl-title">'+r.title+'</div>'
+      + '<div class="dl-desc">'+r.desc+(ready?'':'（待上传）')+'</div>'
+      + '</a>';
+  }).join('');
+}
+renderResources();
+</script>
+</body>
+</html>
