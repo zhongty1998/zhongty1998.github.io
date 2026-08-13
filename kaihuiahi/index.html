@@ -813,12 +813,14 @@ function renderResources(){
   if(!grid) return;
   grid.innerHTML = RESOURCES.map(r => {
     const ready = !!r.file;
-    return '<a class="download-card'+(ready?'':' pending')+'" href="'+(ready?r.file:'#')+'" data-title="'+r.title+'" data-action="'+(r.action||'')+'"
+    return (
+      '<a class="download-card'+(ready?'':' pending')+'" href="'+(ready?r.file:'#')+'" data-title="'+r.title+'" data-action="'+(r.action||'')+'"'
       + (ready?' target="_blank"':'') + ' onclick="'+(r.action?'openMeetingNotifyModal();event.preventDefault();':(ready?'':'event.preventDefault();alert(\'该附件待上传\');'))+'">'
       + '<div class="dl-icon">'+r.icon+'</div>'
       + '<div class="dl-title">'+r.title+'</div>'
       + '<div class="dl-desc">'+r.desc+(ready?'':'（待上传）')+'</div>'
-      + '</a>';
+      + '</a>'
+    );
   }).join('');
 }
 
