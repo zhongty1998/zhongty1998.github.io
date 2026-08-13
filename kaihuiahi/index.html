@@ -821,7 +821,7 @@ function renderResources(){
       + '</a>';
   }).join('');
 }
-renderResources();
+
 
 // ═══════════════════════════════════════════════════════
 // 模拟会议通知生成器
@@ -967,11 +967,11 @@ renderResources();
   // 如果 DOM 已就绪立即附加
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',function(){
-      setTimeout(window.renderResources,100);
+      // renderResources called at end of IIFE after modal fns are defined
     });
-  }else{
-    setTimeout(window.renderResources,100);
   }
+
+  renderResources();
 })();
 
 </script>
