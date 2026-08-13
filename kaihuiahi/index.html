@@ -342,7 +342,47 @@
             .level-header { padding: 1.2rem 1.5rem; }
             .level-body-inner { padding: 0 1.5rem 1.5rem; }
         }
-    </style>
+    
+/* ═══════════════════ 模拟会议通知生成器 ═══════════════════ */
+.mn-modal{display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);font-family:'PingFang SC','Microsoft YaHei',sans-serif;}
+.mn-modal-content{background:#fff;border-radius:16px;width:min(580px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.18);animation:mnSlideIn .25s ease;}
+@keyframes mnSlideIn{from{opacity:0;transform:translateY(-20px) scale(.97)}to{opacity:1;transform:none}}
+.mn-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid #eee;font-size:17px;font-weight:600;color:#1a1a2e;background:#f8f9ff;border-radius:16px 16px 0 0;}
+.mn-close{background:none;border:none;font-size:26px;color:#999;cursor:pointer;padding:0;line-height:1;}
+.mn-close:hover{color:#333;}
+.mn-body{padding:24px;}
+.mn-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.mn-field{display:flex;flex-direction:column;gap:5px;}
+.mn-full{grid-column:1/-1;}
+.mn-field label{font-size:13px;color:#555;font-weight:500;}
+.mn-field input{border:1.5px solid #e0e4f0;border-radius:8px;padding:9px 12px;font-size:14px;color:#1a1a2e;transition:border-color .2s;outline:none;background:#fafbff;}
+.mn-field input:focus{border-color:#4f8ef7;box-shadow:0 0 0 3px rgba(79,142,247,.12);}
+.mn-actions{display:flex;gap:10px;margin-top:18px;}
+.mn-btn{flex:1;padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;}
+.mn-btn-primary{background:linear-gradient(135deg,#4f8ef7,#6c5ce7);color:#fff;}
+.mn-btn-primary:hover{box-shadow:0 4px 14px rgba(79,142,247,.4);transform:translateY(-1px);}
+.mn-preview{margin-top:18px;}
+.mn-preview-label{font-size:13px;color:#888;margin-bottom:8px;}
+.mn-preview-box{background:#f0f4ff;border:1px solid #c8d8f8;border-radius:10px;padding:16px;white-space:pre-wrap;font-size:14.5px;line-height:1.9;color:#1a1a2e;min-height:80px;}
+.mn-preview-actions{display:flex;gap:10px;margin-top:12px;}
+.mn-btn-copy{background:#eef2ff;color:#4f8ef7;border:1.5px solid #c0d0f8;}
+.mn-btn-copy:hover{background:#e0e8ff;}
+.mn-btn-preview{background:#1a1a2e;color:#fff;}
+.mn-btn-preview:hover{background:#2d2d4a;}
+
+/* 全屏会标预览 */
+.mn-fs-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,10,30,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;}
+.mn-fs-close{position:fixed;top:18px;right:24px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:22px;width:40px;height:40px;border-radius:50%;cursor:pointer;line-height:40px;text-align:center;}
+.mn-fs-container{width:min(90vw,1200px);text-align:center;}
+.mn-fs-banner{background:linear-gradient(135deg,#1a1a2e 0%,#2d4a8a 50%,#1a1a2e 100%);border-radius:12px;padding:40px 50px;position:relative;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.5);}
+.mn-fs-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(79,142,247,.2),transparent 70%),radial-gradient(ellipse at 70% 50%,rgba(108,92,231,.2),transparent 70%);}
+.mn-fs-banner > *{position:relative;}
+.mn-fs-banner-sub{font-size:15px;color:rgba(255,255,255,.65);letter-spacing:2px;margin-bottom:14px;}
+.mn-fs-banner-title{font-size:min(5vw,38px);font-weight:700;color:#fff;letter-spacing:4px;margin-bottom:14px;text-shadow:0 2px 8px rgba(0,0,0,.3);}
+.mn-fs-banner-loc{font-size:14px;color:rgba(255,255,255,.5);letter-spacing:1px;}
+.mn-fs-hint{margin-top:20px;color:rgba(255,255,255,.35);font-size:13px;}
+
+</style>
 </head>
 <body>
 
@@ -765,7 +805,7 @@ const RESOURCES = [
   { icon:'🏷️', title:'4. 台签模版', desc:'多种规格台签模版，支持批量导入姓名自动生成打印', file:'files/taiqian.doc' },
   { icon:'🎨', title:'5. 会标模版下载', desc:'通用会议主题横幅设计模版，适配不同会场尺寸', file:'files/huibiaomuban.pptx' },
   { icon:'📦', title:'6. 会议室物资清单', desc:'茶歇/文具/设备/应急物资分类清单，筹备采购一步到位', file:'' },
-  { icon:'🎯', title:'7. 模拟会议', desc:'沉浸式会务模拟演练，从筹备到复盘全流程实战体验', file:'' },
+  { icon:'🎯', title:'7. 模拟会议', desc:'沉浸式会务模拟演练，从筹备到复盘全流程实战体验', action:'meeting-notify' },
   { icon:'📝', title:'8. 会议备忘录', desc:'会议纪要/决议事项/待办追踪一体化模板，会后跟进不遗漏', file:'files/huiyibeiwanglu.exe' },
 ];
 function renderResources(){
@@ -782,6 +822,221 @@ function renderResources(){
   }).join('');
 }
 renderResources();
+
+// ═══════════════════════════════════════════════════════
+// 模拟会议通知生成器
+// ═══════════════════════════════════════════════════════
+(function(){
+  // 2026年日历快速查询（格式：month-day: weekdayNum 0=周一）
+  var WEEKDAYS=['周日','周一','周二','周三','周四','周五','周六'];
+  var CAL={};
+  var d=new Date('2026-01-01');while(d.getFullYear()===2026){CAL[(d.getMonth()+1)+'-'+d.getDate()]=d.getDay();d.setDate(d.getDate()+1);}
+  function getWeekdayStr(dateStr){
+    var m,d_;if(!dateStr)return'';
+    var parts=dateStr.split('-');if(parts.length!==3)return'';
+    m=parseInt(parts[1],10);d_=parseInt(parts[2],10);
+    var key=m+'-'+d_;
+    if(CAL[key]!==undefined)return'（'+WEEKDAYS[CAL[key]]+'）';
+    var dt=new Date(dateStr+'T00:00:00');
+    return dt=='Invalid Date'?'':'（'+WEEKDAYS[dt.getDay()]+'）';
+  }
+  function fmtTime(t){
+    if(!t)return'';
+    var parts=t.split(':');return parseInt(parts[0],10)+':'+(parts[1]||'00');
+  }
+  function stripLeadingZero(str){return String(str).replace(/^0([0-9])/,'$1');}
+
+  // 初始化表单默认日期为今天
+  function initModal(){
+    var today=new Date();
+    var y=today.getFullYear(),m=today.getMonth()+1,day=today.getDate();
+    var dd=y+'-'+(m<10?'0':'')+m+'-'+(day<10?'0':'')+day;
+    var td=document.getElementById('mnDate');
+    if(td&&!td.value)td.value=dd;
+  }
+
+  window.openMeetingNotifyModal=function(){
+    var modal=document.getElementById('meetingNotifyModal');
+    if(!modal)return;
+    modal.style.display='flex';
+    initModal();
+    document.getElementById('mnPreview').style.display='none';
+    document.getElementById('mnTheme').focus();
+  };
+  window.closeMeetingModal=function(){
+    var modal=document.getElementById('meetingNotifyModal');
+    if(modal)modal.style.display='none';
+  };
+
+  window.resetMeetingForm=function(){
+    ['mnTheme','mnLocation','mnAttendees','mnOthers'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value='';
+    });
+    document.getElementById('mnDate').value='';
+    document.getElementById('mnTime').value='';
+    document.getElementById('mnPreview').style.display='none';
+  };
+
+  window.generateMeetingNotice=function(){
+    var theme=document.getElementById('mnTheme').value.trim();
+    var date=document.getElementById('mnDate').value;
+    var time=document.getElementById('mnTime').value;
+    var loc=document.getElementById('mnLocation').value.trim();
+    var attendees=document.getElementById('mnAttendees').value.trim();
+    var others=document.getElementById('mnOthers').value.trim();
+    if(!theme){alert('请填写会议主题');return;}
+    if(!date){alert('请填写会议日期');return;}
+    if(!time){alert('请填写会议时间');return;}
+
+    var parts=date.split('-');
+    var month=parseInt(parts[1],10),day=parseInt(parts[2],10);
+    var weekday=getWeekdayStr(date);
+    var timeStr=fmtTime(time);
+
+    var lines=[];
+    lines.push('会议通知');
+    lines.push('');
+    lines.push('定于'+month+'月'+day+'日'+weekday+stripLeadingZero(timeStr.replace(':',''))+':00');
+    if(loc)lines.push('在'+loc+'召开');
+    lines.push(theme+'会议。');
+    if(attendees)lines.push('请'+attendees+'及时通知到本单位参会人员。');
+    lines.push('各单位收到请回复。');
+    if(others)lines.push('其他要求：'+others);
+
+    var text=lines.join('\n');
+    var box=document.getElementById('mnNoticeText');
+    box.textContent=text;
+    document.getElementById('mnPreview').style.display='block';
+
+    // 更新全屏会标数据
+    document.getElementById('mnFsDateTime').textContent=month+'月'+day+'日'+weekday+' '+timeStr;
+    document.getElementById('mnFsTitle').textContent=theme;
+    document.getElementById('mnFsLoc').textContent=loc||'';
+  };
+
+  window.copyNotice=function(){
+    var text=document.getElementById('mnNoticeText').textContent;
+    if(!text)return;
+    if(navigator.clipboard){navigator.clipboard.writeText(text).then(function(){
+      var btn=document.querySelector('.mn-btn-copy');
+      if(btn){var old=btn.textContent;btn.textContent='✅ 已复制';setTimeout(function(){btn.textContent=old;},1500);}
+    });}else{
+      var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+      alert('已复制到剪贴板');
+    }
+  };
+
+  window.openBannerFullscreen=function(){
+    var theme=document.getElementById('mnTheme').value.trim();
+    if(!theme){alert('请先生成会议通知');return;}
+    var el=document.getElementById('meetingBannerFullscreen');
+    if(el)el.style.display='flex';
+  };
+  window.closeBannerFullscreen=function(){
+    var el=document.getElementById('meetingBannerFullscreen');
+    if(el)el.style.display='none';
+  };
+
+  // ESC 关闭弹窗
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      closeMeetingModal();
+      closeBannerFullscreen();
+    }
+  });
+})();
+// ═══════════════════════════════════════════════════════
+// 模拟会议卡片点击处理
+// ═══════════════════════════════════════════════════════
+(function(){
+  var origRender=typeof renderResources==='function'?renderResources:null;
+  window.renderResources=function(){
+    if(origRender)origRender();
+    var grid=document.getElementById('resources-grid');
+    if(!grid)return;
+    grid.querySelectorAll('.download-card').forEach(function(card){
+      card.addEventListener('click',function(){
+        var title=card.getAttribute('data-title')||'';
+        if(title.indexOf('模拟会议')!==-1){
+          if(typeof openMeetingNotifyModal==='function')openMeetingNotifyModal();
+        }
+      });
+    });
+  };
+  // 如果 DOM 已就绪立即附加
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){
+      setTimeout(window.renderResources,100);
+    });
+  }else{
+    setTimeout(window.renderResources,100);
+  }
+})();
+
 </script>
+
+<!-- 模拟会议通知生成器 -->
+<div id="meetingNotifyModal" class="mn-modal" style="display:none;">
+  <div class="mn-modal-content">
+    <div class="mn-modal-header">
+      <span>📋 模拟会议通知生成器</span>
+      <button class="mn-close" onclick="closeMeetingModal()">&times;</button>
+    </div>
+    <div class="mn-body">
+      <div class="mn-form-grid">
+        <div class="mn-field mn-full">
+          <label>会议主题 <span style="color:#e74c3c">*</span></label>
+          <input type="text" id="mnTheme" placeholder="请输入会议主题，如：年中工作部署会议" maxlength="50">
+        </div>
+        <div class="mn-field">
+          <label>会议日期 <span style="color:#e74c3c">*</span></label>
+          <input type="date" id="mnDate">
+        </div>
+        <div class="mn-field">
+          <label>会议时间 <span style="color:#e74c3c">*</span></label>
+          <input type="time" id="mnTime" placeholder="如：9:00">
+        </div>
+        <div class="mn-field">
+          <label>会议地点</label>
+          <input type="text" id="mnLocation" placeholder="如：办公楼三楼会议室">
+        </div>
+        <div class="mn-field">
+          <label>参会人员</label>
+          <input type="text" id="mnAttendees" placeholder="如：各部门负责人">
+        </div>
+        <div class="mn-field mn-full">
+          <label>其他要求</label>
+          <input type="text" id="mnOthers" placeholder="如：请提前10分钟入场">
+        </div>
+      </div>
+      <div class="mn-actions">
+        <button class="mn-btn mn-btn-primary" onclick="generateMeetingNotice()">🔔 生成会议通知</button>
+        <button class="mn-btn" onclick="resetMeetingForm()">🔄 重置</button>
+      </div>
+      <div id="mnPreview" class="mn-preview" style="display:none;">
+        <div class="mn-preview-label">📄 会议通知预览</div>
+        <div class="mn-preview-box" id="mnNoticeText"></div>
+        <div class="mn-preview-actions">
+          <button class="mn-btn mn-btn-copy" onclick="copyNotice()">📋 复制通知文本</button>
+          <button class="mn-btn mn-btn-preview" onclick="openBannerFullscreen()">🖥️ 全屏预览会标</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 会标全屏预览层 -->
+<div id="meetingBannerFullscreen" class="mn-fs-overlay" style="display:none;" onclick="closeBannerFullscreen()">
+  <button class="mn-fs-close" onclick="closeBannerFullscreen()">&times;</button>
+  <div class="mn-fs-container">
+    <div class="mn-fs-banner" id="mnFsBanner">
+      <div class="mn-fs-banner-sub" id="mnFsDateTime"></div>
+      <div class="mn-fs-banner-title" id="mnFsTitle">会议主题</div>
+      <div class="mn-fs-banner-loc" id="mnFsLoc"></div>
+    </div>
+    <div class="mn-fs-hint">点击任意处关闭</div>
+  </div>
+</div>
 </body>
 </html>
