@@ -912,7 +912,7 @@ function renderResources(){
     var preview=document.getElementById('bannerPreviewEl');
     if(!preview) return;
     var clone=preview.cloneNode(true);
-    clone.style.cssText='width:min(92vw,1300px);border-radius:8px;box-shadow:0 16px 48px rgba(0,0,0,.5);';
+    clone.style.cssText='width:min(92vw,1300px);background:#C0392B;';if(clone.style)clone.style.background='#C0392B';;
     var overlay=document.createElement('div');
     overlay.style='position:fixed;inset:0;z-index:99999;background:#C0392B;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;';
     overlay.onclick=function(){overlay.remove();};
